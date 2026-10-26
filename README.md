@@ -39,3 +39,6 @@ hạn chế đặt sân trùng giờ.
 - Mỗi công việc phát triển trên một nhánh riêng.
 - Tạo Pull Request khi hoàn thành.
 - Có thành viên kiểm tra trước khi merge vào main.
+- ## Quản lý công việc
+- Jira: https://hkdnnhom2.atlassian.net/jira/software/projects/KAN/boards/2/backlog
+- Báo cáo Overleaf: bổ sung sau.
