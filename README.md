@@ -29,7 +29,13 @@ hạn chế đặt sân trùng giờ.
 6. Lê Chi Min
 
 ## Công nghệ
-Đang thống nhất.
+| Thành phần | Công nghệ |
+|---|---|
+| Backend | **Java + Spring Boot** |
+| Giao diện | **Thymeleaf + Bootstrap** |
+| Truy cập dữ liệu | **Spring Data JPA** |
+| Cơ sở dữ liệu | **MySQL** |
+| Quản lý thư viện | **Maven** |
 
 ## Quản lý công việc
 - Jira: bổ sung đường dẫn.
