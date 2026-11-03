@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<div th:fragment="table(owner)" class="booking-list-fragment">
+
+  <div class="table-responsive"
+       th:if="${!bookings.empty}">
+
+    <table class="table align-middle booking-history-table">
+      <caption class="visually-hidden">
+        Danh sách đơn đặt sân
+      </caption>
+
+      <thead>
+      <tr>
+        <th scope="col">Đơn đặt / Sân</th>
+        <th scope="col">Lịch chơi</th>
+        <th scope="col" th:if="${owner}">Khách hàng</th>
+        <th scope="col">Thành tiền</th>
+        <th scope="col">Trạng thái</th>
+        <th scope="col">Thao tác</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr th:each="booking : ${bookings.content}" th:classappend="${booking.status == 'DEPOSIT_SENT'} ? 'needs-deposit-check'">
+
+        <td data-label="Đơn đặt / Sân">
+          <div class="booking-history-court">
+            <span class="booking-history-id"
+                  th:text="'Đơn #' + ${booking.id}">
+            </span>
+
+            <a class="booking-history-name"
+               th:href="@{/courts/{id}(id=${booking.court.id})}"
+               th:text="${booking.court.name}">
+              Tên sân
+            </a>
+
+            <span class="booking-history-sport"
+                  th:text="${booking.court.sport}">
+            </span>
+          </div>
+        </td>
+
+        <td data-label="Lịch chơi">
+          <div class="booking-history-schedule">
+            <strong
+              th:text="${#temporals.format(
+                booking.playDate, 'dd/MM/yyyy')}">
+            </strong>
+
+            <span th:text="|${#numbers.formatInteger(booking.startHour, 2)}:00 – ${#numbers.formatInteger(booking.startHour + 1, 2)}:00|">
+            </span>
+
+            <small>60 phút</small>
+          </div>
+        </td>
+
+        <td th:if="${owner}" data-label="Khách hàng">
+          <div class="booking-history-customer">
+            <strong th:text="${booking.customer.name}"></strong>
+            <span th:text="${booking.customer.phone ?: 'Chưa có SĐT'}"></span>
+            <small th:text="${booking.customer.email}"></small>
+          </div>
+        </td>
+
+        <td data-label="Thành tiền">
+          <div class="booking-history-payment">
+            <strong
+              th:text="${#numbers.formatInteger(
+                booking.amount, 1, 'POINT')} + 'đ'">
+            </strong>
+
+            <small th:if="${booking.depositAmount == null}">Giá lưu khi đặt</small>
+            <small th:if="${booking.depositAmount != null}"
+                   th:text="|Cọc ${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')}đ${booking.depositForfeited ? ' · mất cọc' : ''}|">
+            </small>
+          </div>
+        </td>
+
+        <td data-label="Trạng thái">
+          <span class="status-pill booking-history-status"
+                th:classappend="${booking.status == 'CANCELLED'
+                  ? 'cancelled'
+                  : booking.status == 'COMPLETED'
+                  ? 'completed'
+                  : booking.status == 'CONFIRMED'
+                  ? ''
+                  : 'pending'}"
+                th:text="${booking.statusLabel()}">
+          </span>
+          <small class="booking-hold-deadline"
+                 th:if="${booking.status == 'PENDING_DEPOSIT' and booking.holdUntil != null}"
+                 th:text="|Giữ đến ${#temporals.format(booking.holdUntil, 'HH:mm dd/MM/yyyy')}|"></small>
+        </td>
+
+        <td data-label="Thao tác">
+          <a class="btn btn-outline-success btn-sm text-nowrap"
+             th:href="${owner}
+               ? @{/owner/bookings/{id}(id=${booking.id})}
+               : @{/bookings/{id}(id=${booking.id})}"
+             th:aria-label="'Xem chi tiết đơn #' + ${booking.id}">
+            <span th:text="${!owner and booking.status == 'PENDING_DEPOSIT' ? 'Xem và đặt cọc' : owner and booking.status == 'DEPOSIT_SENT' ? 'Kiểm tra cọc' : 'Chi tiết'}">Chi tiết</span><svg th:replace="~{fragments :: icon('arrow')}"></svg>
+          </a>
+        </td>
+
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Trạng thái chưa có đơn -->
+  <div th:if="${bookings.empty}"
+       class="empty-state booking-history-empty">
+
+    <div class="booking-empty-symbol" aria-hidden="true">▦</div>
+
+    <h3>Chưa có đơn đặt sân</h3>
+
+    <p th:text="${owner
+      ? 'Các đơn của khách hàng sẽ xuất hiện tại đây.'
+      : 'Chọn sân và khung giờ phù hợp để bắt đầu cuộc hẹn thể thao.'}">
+    </p>
+
+    <a th:if="${!owner}"
+       class="btn btn-primary"
+       th:href="@{/}">
+      Khám phá sân
+    </a>
+  </div>
+
+</div>
+</body>
+</html>
