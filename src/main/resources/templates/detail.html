@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:replace="~{fragments :: head('Lịch trống và đặt sân')}"></head>
+
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space court-detail-page">
+
+  <a th:href="@{/}" class="back-link">
+    ← Quay lại danh sách sân
+  </a>
+
+  <div th:replace="~{fragments :: flash}"></div>
+
+  <!-- Tiêu đề sân -->
+  <section class="court-detail-header">
+    <div>
+      <div class="court-detail-badges">
+        <span class="court-detail-sport"
+              th:text="${court.sport}">
+          Môn thể thao
+        </span>
+
+        <span class="court-detail-status"
+              th:classappend="${court.active ? '' : 'is-closed'}"
+              th:text="${court.active
+                ? 'Đang nhận đặt'
+                : 'Tạm ngừng nhận đặt'}">
+        </span>
+      </div>
+
+      <h1 th:text="${court.name}">Tên sân</h1>
+
+      <p class="court-detail-address"
+         th:text="${court.address}">
+        Địa chỉ sân
+      </p>
+
+      <a class="rating-summary" href="#reviews">
+        <th:block th:if="${rating != null}">
+          <span class="stars" th:attr="aria-label=|${rating.averageLabel()} trên 5 sao|"
+                th:style="|--rating: ${rating.average()}|"></span>
+          <strong th:text="${rating.averageLabel()}"></strong>
+          <span th:text="|(${rating.total()} đánh giá)|"></span>
+        </th:block>
+        <span th:if="${rating == null}" class="muted">Chưa có đánh giá</span>
+      </a>
+    </div>
+
+    <div class="court-detail-rate">
+      <span class="muted">Giá tham khảo từ</span>
+
+      <strong th:text="${#numbers.formatInteger(
+                court.minPrice, 1, 'POINT')} + 'đ'">
+      </strong>
+
+      <span class="muted">Mỗi khung 60 phút</span>
+    </div>
+  </section>
+
+  <div class="court-message-action">
+    <form sec:authorize="hasRole('CUSTOMER')" th:action="@{/messages/courts/{id}(id=${court.id})}" method="post"><button type="submit" class="btn btn-outline-success">Nhắn tin chủ sân</button><span class="muted">Trao đổi trực tiếp với chủ sân về sân này.</span></form>
+    <a sec:authorize="isAnonymous()" class="btn btn-primary" th:href="@{/login}">Nhắn tin chủ sân</a>
+    <span sec:authorize="isAnonymous()" class="muted">Đăng nhập tài khoản khách hàng để gửi tin.</span>
+  </div>
+
+  <nav class="court-page-tabs" aria-label="Khám phá sân"><a href="#court-gallery">Hình ảnh sân</a><a href="#schedule">Lịch trống &amp; đặt sân</a><a href="#court-about">Thông tin &amp; tiện ích</a><a href="#reviews">Đánh giá</a></nav>
+
+  <!-- Ảnh chính và thư viện ảnh -->
+  <section id="court-gallery" class="court-photo-section" th:classappend="${court.images != null and court.images.size() > 1 ? 'has-gallery' : ''}"
+           aria-label="Hình ảnh sân">
+
+    <th:block th:if="${court.images != null
+                      and !court.images.empty}">
+
+      <a class="court-main-photo" data-gallery
+         th:href="@{/media/courts/{id}/{file}(
+           id=${court.id},
+           file=${court.images[0].storedName})}"
+         target="_blank"
+         rel="noopener">
+
+        <img th:src="@{/media/courts/{id}/{file}(
+               id=${court.id},
+               file=${court.images[0].storedName},width=1440)}"
+             width="1440" height="960"
+             th:alt="'Ảnh tổng quan ' + ${court.name}"
+             fetchpriority="high" decoding="async" data-court-image>
+
+        <span class="court-photo-caption">
+          Xem ảnh kích thước đầy đủ ↗
+        </span>
+      </a>
+
+      <div class="court-photo-thumbs"
+           th:if="${court.images.size() > 1}">
+
+        <a th:each="image, imageStatus : ${court.images}"
+           th:href="@{/media/courts/{id}/{file}(
+             id=${court.id},
+             file=${image.storedName})}"
+           target="_blank"
+           data-gallery
+           rel="noopener"
+           th:aria-label="|Xem ảnh ${imageStatus.count} của ${court.name}|">
+
+          <img th:src="@{/media/courts/{id}/{file}(
+                 id=${court.id},
+                 file=${image.storedName},width=480)}"
+               decoding="async"
+               th:alt="|Ảnh ${imageStatus.count} của ${court.name}|"
+               loading="lazy">
+        </a>
+      </div>
+    </th:block>
+
+    <div class="court-no-photo"
+         th:if="${court.images == null or court.images.empty}">
+      <span class="court-no-photo-icon" aria-hidden="true"><svg th:replace="~{fragments :: icon('image')}"></svg></span>
+      <strong>Hình ảnh sân đang được cập nhật</strong>
+      <p>Chủ sân chưa tải ảnh cho sân này.</p>
+    </div>
+  </section>
+
+  <!-- Thông tin nhanh -->
+  <section class="court-quick-facts" aria-label="Thông tin nhanh">
+    <div>
+      <span>MÔN THỂ THAO</span>
+      <strong th:text="${court.sport}"></strong>
+    </div>
+
+    <div>
+      <span>GIỜ HOẠT ĐỘNG</span>
+      <strong th:text="|${court.openHour}:00 – ${court.closeHour}:00|">
+      </strong>
+    </div>
+
+    <div>
+      <span>THỜI LƯỢNG</span>
+      <strong>60 phút / lượt</strong>
+    </div>
+
+    <div>
+      <span>THANH TOÁN</span>
+      <strong>Cọc 50% · Còn lại tại sân</strong>
+    </div>
+  </section>
+
+  <div class="row g-4">
+
+    <!-- Lịch đặt -->
+    <section class="col-lg-8">
+      <div class="surface court-schedule" id="schedule">
+
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow text-green mb-2">
+              CHỌN GIỜ, LÊN LỊCH
+            </p>
+            <h2 class="mb-0">Lịch trống của sân</h2>
+          </div>
+
+          <span class="court-duration-badge">
+            60 phút / khung giờ
+          </span>
+        </div>
+
+        <form method="get"
+              th:action="@{/courts/{id}(id=${court.id})}"
+              class="court-date-filter">
+
+          <div class="court-date-field">
+            <label for="date" class="form-label">Ngày bạn muốn chơi</label>
+
+            <input class="form-control"
+                   type="date"
+                   id="date"
+                   name="date"
+                   th:value="${date}"
+                   th:min="${today}"
+                   th:max="${lastDate}"
+                   required>
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            Xem lịch
+          </button>
+        </form>
+
+        <div class="court-selected-date">
+          <strong th:text="|Lịch ngày ${#temporals.format(date, 'dd/MM/yyyy')}|">
+          </strong>
+          <span>Giờ bắt đầu theo giờ Việt Nam</span>
+        </div>
+
+        <div class="legend court-slot-legend">
+          <span>
+            <i class="free"></i>
+            Còn trống
+          </span>
+
+          <span>
+            <i></i>
+            Đã đặt / đã khóa / đã qua giờ
+          </span>
+        </div>
+
+        <div class="slot-grid">
+
+          <div th:each="slot : ${slots}"
+               class="slot court-time-slot"
+               th:classappend="${slot.state == 'FREE'
+                 ? 'available'
+                 : 'unavailable'}">
+
+            <strong class="court-slot-time"
+                    th:text="${slot.label}">
+            </strong>
+
+            <span class="court-slot-price"
+                  th:text="${#numbers.formatInteger(
+                    slot.price, 1, 'POINT')} + 'đ'">
+            </span>
+
+            <small class="court-slot-state"
+                   th:text="${slot.state == 'FREE'
+                     ? 'Còn trống'
+                     : slot.state == 'BOOKED'
+                     ? 'Đã đặt'
+                     : slot.state == 'BLOCKED'
+                     ? 'Đã khóa'
+                     : slot.state == 'CLOSED'
+                     ? 'Ngừng nhận đặt'
+                     : 'Đã qua giờ'}">
+            </small>
+
+            <!-- Khách hàng chọn giờ -->
+            <a th:if="${slot.state == 'FREE'}"
+               sec:authorize="hasRole('CUSTOMER')"
+               class="btn btn-primary btn-sm w-100"
+               th:href="@{/bookings/confirm(
+                 courtId=${court.id},
+                 date=${date},
+                 hour=${slot.hour})}">
+              Chọn giờ này
+            </a>
+
+            <!-- Người chưa đăng nhập -->
+            <a th:if="${slot.state == 'FREE'}"
+               sec:authorize="isAnonymous()"
+               class="btn btn-outline-success btn-sm w-100"
+               th:href="@{/login}">
+              Đăng nhập để đặt
+            </a>
+
+            <!-- Chủ sân khóa / mở giờ -->
+            <form th:if="${isOwner
+                           and (slot.state == 'FREE'
+                             or slot.state == 'BLOCKED')}"
+                  th:action="@{/owner/courts/{id}/block(
+                    id=${court.id})}"
+                  method="post">
+
+              <input type="hidden"
+                     name="date"
+                     th:value="${date}">
+
+              <input type="hidden"
+                     name="hour"
+                     th:value="${slot.hour}">
+
+              <button class="btn btn-outline-secondary btn-sm w-100"
+                      type="submit"
+                      onclick="return confirm('Xác nhận thay đổi trạng thái khung giờ này?');"
+                      th:text="${slot.state == 'BLOCKED'
+                        ? 'Mở lại giờ'
+                        : 'Khóa giờ'}">
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="empty-state"
+             th:if="${slots.empty}">
+          <h3>Chưa có khung giờ</h3>
+          <p class="mb-0">
+            Không có khung giờ hoạt động trong ngày đã chọn.
+          </p>
+        </div>
+
+        <p class="court-schedule-note">
+          Lịch có thể thay đổi khi có người đặt.
+          Hệ thống kiểm tra lại khung giờ khi bạn xác nhận.
+        </p>
+
+        <div class="court-owner-note"
+             th:if="${isOwner}">
+          Bạn đang quản lý sân này. Sử dụng nút
+          <strong>Khóa giờ</strong> để ngừng nhận đặt
+          một khung giờ cụ thể.
+        </div>
+      </div>
+
+      <!-- Giới thiệu -->
+      <section class="surface mt-4" id="court-about">
+        <p class="eyebrow text-green">KHÔNG GIAN THỂ THAO</p>
+        <h2>Giới thiệu sân</h2>
+
+        <p class="preserve court-description"
+           th:if="${court.description != null
+                    and !#strings.isEmpty(court.description)}"
+           th:text="${court.description}">
+        </p>
+
+        <p class="muted"
+           th:if="${court.description == null
+                    or #strings.isEmpty(court.description)}">
+          Chủ sân đang cập nhật thông tin giới thiệu.
+        </p>
+
+        <div class="court-amenities">
+          <h3>Tiện ích</h3>
+
+          <p th:if="${court.amenities != null
+                      and !#strings.isEmpty(court.amenities)}"
+             th:text="${court.amenities}">
+          </p>
+
+          <p class="muted"
+             th:if="${court.amenities == null
+                      or #strings.isEmpty(court.amenities)}">
+            Chủ sân chưa cập nhật danh sách tiện ích.
+          </p>
+        </div>
+      </section>
+
+      <!-- Đánh giá -->
+      <section class="surface mt-4" id="reviews">
+        <p class="eyebrow text-green">TỪ NGƯỜI ĐÃ CHƠI</p>
+        <div class="review-heading">
+          <h2 class="mb-0">Đánh giá sân</h2>
+          <div class="review-score" th:if="${rating != null}">
+            <strong th:text="${rating.averageLabel()}"></strong>
+            <div>
+              <span class="stars" th:style="|--rating: ${rating.average()}|" aria-hidden="true"></span>
+              <small th:text="|${rating.total()} đánh giá|"></small>
+            </div>
+          </div>
+        </div>
+
+        <p class="muted mt-3 mb-0" th:if="${reviews.empty}">
+          Sân chưa có đánh giá. Đánh giá chỉ đến từ khách
+          đã đặt và hoàn tất lượt chơi tại sân.
+        </p>
+
+        <ul class="review-list" th:if="${!reviews.empty}">
+          <li th:each="r : ${reviews.content}" th:id="'review-' + ${r.id}">
+            <div class="review-meta">
+              <strong th:text="${r.reviewerName()}"></strong>
+              <span class="stars" th:style="|--rating: ${r.rating}|"
+                    th:attr="aria-label=|${r.rating} trên 5 sao|"></span>
+              <small th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy')}"></small>
+            </div>
+            <p class="preserve" th:if="${r.comment != null}" th:text="${r.comment}"></p>
+            <span class="review-verified"><svg th:replace="~{fragments :: icon('check')}"></svg>Đã chơi tại sân</span>
+
+            <div class="review-reply" th:if="${r.ownerReply != null}">
+              <strong>Phản hồi của chủ sân</strong>
+              <small th:text="${#temporals.format(r.repliedAt, 'dd/MM/yyyy')}"></small>
+              <p class="preserve" th:text="${r.ownerReply}"></p>
+            </div>
+
+            <details class="review-reply-form" th:if="${isOwner}">
+              <summary th:text="${r.ownerReply == null ? 'Trả lời đánh giá' : 'Sửa phản hồi'}"></summary>
+              <form th:action="@{/owner/reviews/{id}/reply(id=${r.id})}" method="post">
+                <label class="form-label" th:for="|reply-${r.id}|">Nội dung phản hồi</label>
+                <textarea th:id="|reply-${r.id}|" name="reply"
+                          class="form-control"
+                          rows="2"
+                          maxlength="1000"
+                          placeholder="Cảm ơn bạn đã chọn sân…"
+                          th:text="${r.ownerReply}"></textarea>
+                <div class="d-flex gap-2 align-items-center mt-2 flex-wrap">
+                  <button class="btn btn-primary btn-sm" type="submit">Lưu phản hồi</button>
+                  <small class="muted" th:if="${r.ownerReply != null}">Để trống rồi lưu để xóa phản hồi.</small>
+                </div>
+              </form>
+            </details>
+          </li>
+        </ul>
+
+        <nav class="pager mt-3" th:if="${reviews.totalPages > 1}"
+             aria-label="Phân trang đánh giá">
+          <a class="btn btn-outline-secondary btn-sm"
+             th:if="${reviews.hasPrevious()}"
+             th:href="@{/courts/{id}(id=${court.id},date=${date},reviewPage=${reviews.number - 1})} + '#reviews'">
+            ← Mới hơn
+          </a>
+          <span class="muted" th:text="|Trang ${reviews.number + 1}/${reviews.totalPages}|"></span>
+          <a class="btn btn-outline-secondary btn-sm"
+             th:if="${reviews.hasNext()}"
+             th:href="@{/courts/{id}(id=${court.id},date=${date},reviewPage=${reviews.number + 1})} + '#reviews'">
+            Cũ hơn →
+          </a>
+        </nav>
+      </section>
+    </section>
+
+    <!-- Giá và chính sách -->
+    <aside class="col-lg-4">
+      <div class="court-sidebar">
+
+        <section class="surface court-price-panel">
+          <p class="eyebrow text-green">CHI PHÍ RÕ RÀNG</p>
+          <h2>Bảng giá sân</h2>
+
+          <div class="court-price-row">
+            <span>Giá mặc định</span>
+
+            <div>
+              <strong th:text="${#numbers.formatInteger(
+                        court.price, 1, 'POINT')} + 'đ'">
+              </strong>
+              <small>/ giờ</small>
+            </div>
+          </div>
+
+          <div th:if="${court.priceRules != null
+                        and !court.priceRules.empty}">
+            <div class="court-price-row"
+                 th:each="rule : ${court.priceRules}">
+              <span th:text="|${rule.startHour}:00 – ${rule.endHour}:00|">
+              </span>
+
+              <div>
+                <strong th:text="${#numbers.formatInteger(
+                          rule.price, 1, 'POINT')} + 'đ'">
+                </strong>
+                <small>/ giờ</small>
+              </div>
+            </div>
+          </div>
+
+          <p class="muted mt-3 mb-0">
+            Giá cụ thể hiển thị tại từng khung giờ.
+            Giá của đơn được lưu khi đặt thành công.
+          </p>
+
+          <a href="#schedule"
+             class="btn btn-primary w-100 mt-4">
+            Chọn giờ &amp; đặt sân
+          </a>
+        </section>
+
+        <section class="surface mt-4 court-policy-panel">
+          <p class="eyebrow text-green">TRƯỚC KHI ĐẶT</p>
+          <h2>Thông tin cần biết</h2>
+
+          <div class="court-policy-item">
+            <strong>Đặt cọc 50% qua QR</strong>
+            <p>
+              Giữ chỗ 30 phút. Xác nhận chắc chắn đến sân rồi chuyển cọc 50%;
+              phần còn lại trả khi đến chơi.
+            </p>
+          </div>
+
+          <div class="court-policy-item">
+            <strong>Chính sách hủy</strong>
+            <p>
+              Khách hàng được hủy trước giờ chơi trên 2 tiếng. Hủy sau khi chuyển cọc sẽ mất cọc.
+            </p>
+          </div>
+
+          <div class="court-policy-item">
+            <strong>Thời gian đặt trước</strong>
+            <p>
+              Chỉ nhận lịch trong 30 ngày tới.
+              Mỗi lượt kéo dài 60 phút, bắt đầu vào giờ tròn.
+            </p>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+  </div>
+<a class="mobile-schedule-link btn btn-primary" href="#schedule"><svg th:replace="~{fragments :: icon('calendar')}"></svg>Chọn giờ đặt sân</a>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

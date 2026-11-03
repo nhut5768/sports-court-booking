@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Tìm sân. Hẹn giờ. Ra sân.')}"></head>
+<body><header th:replace="~{fragments :: siteHeader}"></header>
+<main id="main-content" tabindex="-1" class="container home-page" th:classappend="${hasSearch ? 'is-search' : ''}">
+<div th:replace="~{fragments :: flash}"></div>
+<section class="discovery-hero" aria-labelledby="hero-title">
+  <img class="discovery-hero-photo" th:src="@{/images/editorial/hero.jpg}" width="1800" height="1350" alt="Ảnh minh họa các sân tennis nhìn từ trên cao" fetchpriority="high" decoding="async">
+  <div class="discovery-hero-shade"></div>
+  <div class="discovery-hero-content"><p class="eyebrow">SÂN NHÀ · HẸN NHAU TRÊN SÂN</p><h1 id="hero-title">Thêm giờ chơi.<br><em>Thêm niềm vui.</em></h1><p>Chọn sân bạn thích. Tìm giờ bạn rảnh.<br>Biến một ngày bình thường thành cuộc hẹn đáng mong chờ.</p>
+    <div class="hero-assurances"><span><svg th:replace="~{fragments :: icon('calendar')}"></svg>Lịch trống theo từng giờ</span><span><svg th:replace="~{fragments :: icon('wallet')}"></svg>Giá rõ ràng trước khi đặt</span></div>
+  </div>
+  <span class="hero-image-caption">Ảnh minh họa không gian thể thao</span>
+  <form class="hero-search" method="get" th:action="@{/} + '#find'" aria-label="Chọn môn, khu vực và ngày chơi" data-search-form>
+    <input type="hidden" name="q" th:value="${q}"><input type="hidden" name="minPrice" th:value="${minPrice}"><input type="hidden" name="maxPrice" th:value="${maxPrice}">
+    <div><label for="hero-sport">Bạn muốn chơi gì?</label><select id="hero-sport" name="sport" class="form-select"><option value="">Tất cả môn</option><option th:each="item : ${sports}" th:value="${item}" th:text="${item}" th:selected="${item == sport}"></option></select></div>
+    <div><label for="hero-area">Chơi ở đâu?</label><select id="hero-area" name="area" class="form-select"><option value="">Tất cả khu vực</option><option th:each="item : ${areas}" th:value="${item}" th:text="${item}" th:selected="${item == area}"></option></select></div>
+    <div><label for="hero-date">Ngày ra sân</label><input id="hero-date" name="date" type="date" class="form-control" th:value="${selectedDate}" th:min="${today}" th:max="${searchLastDate}"></div>
+    <button class="btn btn-primary" type="submit"><svg th:replace="~{fragments :: icon('search')}"></svg><span>Tìm sân</span></button>
+  </form>
+</section>
+<p class="discovery-search-note">Chọn ngày để xem số khung giờ còn trống và mở đúng lịch của sân. Lịch được kiểm tra lại khi xác nhận đặt.</p>
+<section class="discovery-sports" th:unless="${hasSearch}" aria-labelledby="sports-title">
+ <div class="section-heading"><div><p class="eyebrow text-green">MỖI MÔN MỘT NIỀM VUI</p><h2 id="sports-title">Hôm nay, bạn muốn chơi gì?</h2></div><span class="muted">Chọn môn. Tìm đồng đội. Ra sân.</span></div>
+ <div class="sport-grid"><a th:each="sportName : ${sports}" class="sport-photo-card" th:href="@{/(sport=${sportName})} + '#find'" th:with="image=${sportName == 'Bóng đá' ? 'football' : sportName == 'Cầu lông' ? 'badminton' : sportName == 'Tennis' ? 'tennis' : 'basketball'}">
+ <img th:src="@{/images/editorial/{file}.jpg(file=${image})}" th:alt="|Ảnh minh họa môn ${sportName}|" loading="lazy" decoding="async" width="840" height="560" th:classappend="${image}"><span class="sport-photo-shade"></span><span class="sport-photo-copy"><strong th:text="${sportName}"></strong><small th:text="|${sportCounts.get(sportName)} sân đang nhận đặt|"></small></span><span class="sport-photo-arrow" aria-hidden="true">↗</span></a></div>
+ <p class="editorial-note">Ảnh danh mục dùng để minh họa môn thể thao. Ảnh và thông tin của từng sân nằm trong danh sách bên dưới.</p>
+</section>
+<section id="find" class="discovery-results section-space" aria-labelledby="results-title">
+ <div class="section-heading"><div><p class="eyebrow text-green">KHÔNG GIAN CHO CUỘC HẸN TIẾP THEO</p><h2 id="results-title" th:text="${hasSearch ? 'Sân theo lựa chọn của bạn' : 'Tìm một sân, bắt đầu cuộc vui'}"></h2></div><span class="results-count" th:text="|${courts.totalElements} sân phù hợp|"></span></div>
+ <section class="search-panel refined-filters" aria-label="Bộ lọc sân"><details class="search-disclosure" open><summary><svg th:replace="~{fragments :: icon('search')}"></svg>Tinh chỉnh lựa chọn<span>Thu gọn / Mở bộ lọc</span></summary>
+ <form method="get" th:action="@{/} + '#find'" class="discovery-filter-form" data-search-form>
+ <input type="hidden" name="sport" th:value="${sport}"><input type="hidden" name="area" th:value="${area}"><input type="hidden" name="date" th:value="${selectedDate}">
+ <div><label for="q" class="form-label">Tên sân hoặc địa chỉ</label><input id="q" name="q" class="form-control" th:value="${q}" placeholder="Ví dụ: Bình Thạnh…" maxlength="200"></div>
+ <div><label for="minPrice" class="form-label">Giá từ (đ/giờ)</label><input id="minPrice" name="minPrice" type="number" min="0" step="1000" class="form-control" th:value="${minPrice}" placeholder="Không giới hạn"></div>
+ <div><label for="maxPrice" class="form-label">Giá đến (đ/giờ)</label><input id="maxPrice" name="maxPrice" type="number" min="0" step="1000" class="form-control" th:value="${maxPrice}" placeholder="Không giới hạn"></div>
+ <div class="filter-actions"><button class="btn btn-primary" type="submit">Áp dụng</button><a class="filter-reset" th:href="@{/}">Xóa bộ lọc</a></div>
+ </form></details></section>
+ <p class="results-date" th:if="${selectedDate != null}" th:text="|Đang xem lịch ngày ${#temporals.format(selectedDate,'dd/MM/yyyy')} · Giá từ là mức thấp nhất của sân; giá cụ thể nằm ở từng khung giờ.|"></p>
+ <div th:if="${courts.empty}" class="empty-state surface"><svg th:replace="~{fragments :: icon('search')}"></svg><h3>Chưa tìm thấy sân phù hợp</h3><p>Thử đổi môn thể thao, khu vực hoặc nới khoảng giá.</p><a class="btn btn-outline-success" th:href="@{/}">Khám phá tất cả sân</a></div>
+ <div class="discovery-court-grid"><article th:each="court : ${courts.content}" class="court-card">
+  <a class="card-art" th:href="@{/courts/{id}(id=${court.id},date=${selectedDate})}" th:aria-label="|Xem sân ${court.name}|"><span class="sport-tag" th:text="${court.sport}"></span>
+  <img th:if="${covers.get(court.id) != null}" class="card-photo" sizes="(min-width:1200px) 400px, (min-width:768px) 50vw, 100vw" th:srcset="@{/media/courts/{id}/{file}(id=${court.id},file=${covers.get(court.id).storedName},width=480)} + ' 480w, ' + @{/media/courts/{id}/{file}(id=${court.id},file=${covers.get(court.id).storedName},width=800)} + ' 800w'" th:src="@{/media/courts/{id}/{file}(id=${court.id},file=${covers.get(court.id).storedName},width=800)}" th:alt="|Ảnh do chủ sân cung cấp: ${court.name}|" loading="lazy" decoding="async" width="800" height="560" data-court-image>
+  <span class="photo-placeholder" th:classappend="${covers.get(court.id) != null ? 'is-image-fallback' : ''}"><svg th:replace="~{fragments :: icon('court')}"></svg><span>Chưa có ảnh sân</span></span></a>
+  <div class="card-body"><span class="court-area"><svg th:replace="~{fragments :: icon('pin')}"></svg><span th:text="${court.area}"></span></span><h3><a th:href="@{/courts/{id}(id=${court.id},date=${selectedDate})}" th:text="${court.name}"></a></h3><p class="address" th:text="${court.address}"></p>
+  <p class="card-rating" th:with="rt=${ratings.get(court.id)}"><th:block th:if="${rt != null}"><span class="stars" th:style="|--rating: ${rt.average()}|" th:attr="aria-label=|${rt.averageLabel()} trên 5 sao|"></span><strong th:text="${rt.averageLabel()}"></strong><span th:text="|(${rt.total()} đánh giá)|"></span></th:block><span th:if="${rt == null}">Chưa có đánh giá</span></p>
+  <p class="card-availability" th:if="${selectedDate != null}" th:text="${availability.get(court.id) > 0 ? availability.get(court.id) + ' khung giờ còn trống trong ngày' : 'Chưa có khung giờ trống trong ngày'}"></p>
+  <div class="court-card-footer"><div><strong class="price" th:text="|Từ ${#numbers.formatInteger(court.minPrice,1,'POINT')}đ|"></strong><small>/ khung 60 phút</small></div><a class="court-card-cta" th:href="@{/courts/{id}(id=${court.id},date=${selectedDate})}">Xem lịch <span aria-hidden="true">↗</span></a></div></div>
+ </article></div>
+ <nav class="pager mt-4" aria-label="Phân trang danh sách sân" th:if="${courts.totalPages > 1}"><a class="btn btn-outline-secondary btn-sm" th:if="${courts.hasPrevious()}" th:href="@{/(q=${q},sport=${sport},area=${area},date=${selectedDate},minPrice=${minPrice},maxPrice=${maxPrice},page=${courts.number-1})} + '#find'">Trước</a><span class="muted" th:text="|Trang ${courts.number+1}/${courts.totalPages}|"></span><a class="btn btn-outline-secondary btn-sm" th:if="${courts.hasNext()}" th:href="@{/(q=${q},sport=${sport},area=${area},date=${selectedDate},minPrice=${minPrice},maxPrice=${maxPrice},page=${courts.number+1})} + '#find'">Sau</a></nav>
+</section>
+<section id="how-it-works" class="booking-steps section-space" aria-labelledby="steps-title"><div class="section-heading"><div><p class="eyebrow text-green">TỪ MÀN HÌNH ĐẾN SÂN CHƠI</p><h2 id="steps-title">Đặt gọn gàng. Chơi hết mình.</h2></div><p class="muted">Ba bước để sẵn sàng ra sân.</p></div><div class="step-grid"><article><span class="step-number">01</span><svg th:replace="~{fragments :: icon('search')}"></svg><h3>Tìm sân, chọn giờ</h3><p>Chọn môn và khu vực. Xem ảnh, giá từng giờ và lịch còn trống trước khi đặt.</p></article><article><span class="step-number">02</span><svg th:replace="~{fragments :: icon('wallet')}"></svg><h3>Giữ chỗ, chuyển cọc</h3><p>Xác nhận đến sân và chuyển cọc 50% qua QR trong thời hạn giữ chỗ 30 phút.</p></article><article><span class="step-number">03</span><svg th:replace="~{fragments :: icon('calendar')}"></svg><h3>Theo dõi và ra sân</h3><p>Chờ chủ sân xác nhận cọc. Phần còn lại thanh toán tại sân khi đến chơi.</p></article></div></section>
+<section class="owner-invitation" aria-labelledby="owner-invitation-title"><div class="owner-invitation-photo"><img th:src="@{/images/editorial/football.jpg}" alt="Ảnh minh họa một sân bóng đá buổi chiều" loading="lazy" decoding="async" width="840" height="560"><span>KHÔNG GIAN CỦA BẠN. NHỮNG CUỘC HẸN MỚI.</span></div><div><p class="eyebrow">DÀNH CHO CHỦ SÂN</p><h2 id="owner-invitation-title">Sân đã sẵn sàng.<br>Cùng kết nối người chơi.</h2><p>Quản lý lịch đặt, cập nhật giá và trò chuyện với khách trong một không gian dành riêng cho chủ sân.</p><a class="btn btn-lime" th:href="${viewer != null and viewer.owner ? '/owner' : '/register/owner'}">Dành cho chủ sân ↗</a><details><summary>Bạn muốn tham gia với tư cách chủ sân?</summary><p>Đăng ký chủ sân bằng email riêng để tự thêm và quản lý sân. Đăng ký khách hàng hoặc Google lần đầu chỉ tạo tài khoản khách hàng.</p></details></div></section>
+</main><footer th:replace="~{fragments :: footer}"></footer></body></html>
