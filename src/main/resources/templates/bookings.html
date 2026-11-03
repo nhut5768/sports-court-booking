@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Lịch của tôi')}"></head>
+
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space my-bookings-page">
+
+  <div class="my-bookings-heading">
+    <div>
+      <p class="eyebrow text-green">CUỘC HẸN THỂ THAO CỦA BẠN</p>
+      <h1>Lịch của tôi</h1>
+      <p class="muted mb-0">
+        Theo dõi lịch chơi, xem thông tin đơn và quản lý các lượt đặt sân.
+      </p>
+    </div>
+
+    <a class="btn btn-primary" th:href="@{/}">
+      + Đặt thêm sân
+    </a>
+  </div>
+
+  <div th:replace="~{fragments :: flash}"></div>
+
+  <div class="workspace-section-note"><svg th:replace="~{fragments :: icon('calendar')}"></svg><span>Mỗi đơn là một cuộc hẹn. Kiểm tra thời hạn giữ chỗ và trạng thái cọc để lịch chơi luôn rõ ràng.</span></div>
+
+  <!-- Hướng dẫn -->
+  <section class="my-bookings-guide" aria-label="Thông tin đặt sân">
+    <div>
+      <span class="my-guide-number">01</span>
+      <div>
+        <strong>Xem lại lịch chơi</strong>
+        <p>Ngày, giờ và giá thuê được hiển thị trong từng đơn.</p>
+      </div>
+    </div>
+
+    <div>
+      <span class="my-guide-number">02</span>
+      <div>
+        <strong>Cọc 50% qua QR</strong>
+        <p>Xác nhận đến sân, chuyển cọc; phần còn lại trả tại sân.</p>
+      </div>
+    </div>
+
+    <div>
+      <span class="my-guide-number">03</span>
+      <div>
+        <strong>Hủy theo chính sách</strong>
+        <p>Hủy trước giờ chơi trên 2 tiếng; đã chuyển cọc thì mất cọc.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Thông báo từ chủ sân -->
+  <section class="surface notice-panel" id="notifications">
+    <div class="my-bookings-panel-heading">
+      <div>
+        <p class="eyebrow text-green mb-2">CẬP NHẬT TỪ CHỦ SÂN</p>
+        <h2 class="mb-0">Thông báo</h2>
+      </div>
+
+      <form th:if="${unreadNotifications > 0}"
+            th:action="@{/notifications/read}"
+            method="post">
+        <button class="btn btn-outline-secondary btn-sm" type="submit">
+          Đánh dấu đã đọc tất cả
+        </button>
+      </form>
+    </div>
+
+    <p class="muted mb-0" th:if="${#lists.isEmpty(notifications)}">Chưa có thông báo. Các cập nhật về đơn đặt sân sẽ xuất hiện tại đây.</p>
+    <ul class="notice-list" th:if="${!#lists.isEmpty(notifications)}">
+      <li th:each="n : ${notifications}"
+          th:classappend="${n.readAt == null} ? 'is-unread'">
+        <a th:href="${n.booking != null} ? @{/bookings/{id}(id=${n.booking.id})} : @{/bookings}">
+          <span th:text="${n.message}"></span>
+          <small th:text="${#temporals.format(n.createdAt, 'HH:mm dd/MM/yyyy')}"></small>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Danh sách đơn -->
+  <section class="surface my-bookings-panel">
+    <div class="my-bookings-panel-heading">
+      <div>
+        <p class="eyebrow text-green mb-2">LỊCH SỬ ĐẶT SÂN</p>
+        <h2 class="mb-0">Các đơn của bạn</h2>
+      </div>
+
+      <span class="my-bookings-count"
+            th:text="${bookings.totalElements} + ' đơn đặt'">
+      </span>
+    </div>
+
+    <div th:replace="~{booking-table :: table(false)}"></div>
+
+    <nav class="pager mt-4"
+         aria-label="Phân trang lịch sử đặt sân"
+         th:if="${bookings.totalPages > 1}">
+
+      <a class="btn btn-outline-secondary btn-sm"
+         th:if="${bookings.hasPrevious()}"
+         th:href="@{/bookings(page=${bookings.number - 1})}">
+        ← Trước
+      </a>
+
+      <span class="muted"
+            th:text="|Trang ${bookings.number + 1}/${bookings.totalPages}|">
+      </span>
+
+      <a class="btn btn-outline-secondary btn-sm"
+         th:if="${bookings.hasNext()}"
+         th:href="@{/bookings(page=${bookings.number + 1})}">
+        Sau →
+      </a>
+    </nav>
+  </section>
+
+  <p class="my-bookings-help">
+    Chọn “Chi tiết” để xem đầy đủ thông tin và thao tác hủy
+    nếu đơn còn đủ điều kiện.
+  </p>
+
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>
