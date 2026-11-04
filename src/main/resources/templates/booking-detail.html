@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Chi tiết đơn đặt')}"></head>
+
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space order-detail-page">
+
+  <a class="back-link"
+     th:href="${ownerView} ? @{/owner} : @{/bookings}">
+    ← Quay lại danh sách đơn
+  </a>
+
+  <div th:replace="~{fragments :: flash}"></div>
+
+  <div class="reservation-intro"><span>01 · Chọn giờ</span><span>02 · Xác nhận</span><span>03 · Cọc &amp; theo dõi</span></div>
+
+  <!-- Tiêu đề và trạng thái -->
+  <div class="order-detail-heading">
+    <div>
+      <p class="eyebrow text-green">THÔNG TIN CUỘC HẸN</p>
+      <h1 th:text="'Đơn đặt sân #' + ${booking.id}"></h1>
+      <p class="muted mb-0">
+        Theo dõi thông tin, trạng thái và các thao tác của đơn.
+      </p>
+    </div>
+
+    <span class="status-pill order-detail-status"
+          th:classappend="${booking.status == 'CANCELLED'
+            ? 'cancelled'
+            : booking.status == 'COMPLETED'
+            ? 'completed'
+            : booking.status == 'CONFIRMED'
+            ? ''
+            : 'pending'}"
+          th:text="${booking.statusLabel()}">
+    </span>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Thông tin sân và lịch -->
+    <div class="col-lg-8">
+      <section class="surface">
+        <p class="eyebrow text-green">SÂN ĐÃ CHỌN</p>
+
+        <span class="order-sport-badge"
+              th:text="${booking.court.sport}">
+        </span>
+
+        <h2 class="order-court-name">
+          <a th:href="@{/courts/{id}(id=${booking.court.id})}"
+             th:text="${booking.court.name}">
+          </a>
+        </h2>
+
+        <p class="order-address"
+           th:text="${booking.court.address}">
+        </p>
+
+        <div class="order-facts">
+          <div>
+            <span>NGÀY CHƠI</span>
+            <strong th:text="${#temporals.format(
+                      booking.playDate, 'dd/MM/yyyy')}">
+            </strong>
+          </div>
+
+          <div>
+            <span>KHUNG GIỜ</span>
+            <strong
+              th:text="|${#numbers.formatInteger(booking.startHour, 2)}:00 – ${#numbers.formatInteger(booking.startHour + 1, 2)}:00|">
+            </strong>
+          </div>
+
+          <div>
+            <span>THỜI LƯỢNG</span>
+            <strong>60 phút</strong>
+          </div>
+
+          <div>
+            <span>KHU VỰC</span>
+            <strong th:text="${booking.court.area}"></strong>
+          </div>
+        </div>
+
+        <a class="btn btn-outline-success btn-sm mt-4"
+           th:href="@{/courts/{id}(
+             id=${booking.court.id},
+             date=${booking.playDate})}">
+          Xem lịch sân ↗
+        </a>
+      </section>
+
+      <!-- Chỉ chủ sân xem thông tin khách -->
+      <section class="surface mt-4" th:if="${ownerView}">
+        <p class="eyebrow text-green">THÔNG TIN LIÊN HỆ</p>
+        <h2>Khách đặt sân</h2>
+
+        <dl class="order-customer-info">
+          <div>
+            <dt>Họ tên</dt>
+            <dd th:text="${booking.customer.name}"></dd>
+          </div>
+
+          <div>
+            <dt>Số điện thoại</dt>
+            <dd th:text="${booking.customer.phone ?: 'Chưa cập nhật'}"></dd>
+          </div>
+
+          <div>
+            <dt>Email</dt>
+            <dd th:text="${booking.customer.email}"></dd>
+          </div>
+        </dl>
+
+        <!-- Khách quên mật khẩu: chủ sân cấp mật khẩu tạm sau khi xác minh qua điện thoại -->
+        <div class="temp-password" th:if="${tempPassword != null}">
+          <span>Mật khẩu tạm (chỉ hiển thị một lần):</span>
+          <code th:text="${tempPassword}"></code>
+          <small>
+            Đọc cho khách qua điện thoại. Khách đăng nhập bằng mật khẩu này
+            sẽ phải đặt mật khẩu mới ngay.
+          </small>
+        </div>
+
+        <form class="mt-3"
+              th:action="@{/owner/bookings/{id}/temp-password(id=${booking.id})}"
+              method="post"
+              onsubmit="return confirm('Chỉ cấp khi khách gọi điện báo quên mật khẩu và bạn đã xác minh đúng người. Mật khẩu cũ của khách sẽ không dùng được nữa. Tiếp tục?');">
+          <button class="btn btn-outline-secondary btn-sm" type="submit">
+            Khách quên mật khẩu? Cấp mật khẩu tạm
+          </button>
+        </form>
+      </section>
+
+      <!-- Thông tin theo trạng thái -->
+      <section class="surface mt-4 order-state-panel">
+        <p class="eyebrow text-green">TÌNH TRẠNG ĐƠN</p>
+
+        <th:block th:if="${booking.status == 'PENDING_DEPOSIT'}">
+          <h2>Khung giờ đang được giữ, chờ đặt cọc</h2>
+          <p class="deposit-warning"
+             th:if="${booking.holdUntil != null}"
+             th:text="|Giữ chỗ đến ${#temporals.format(booking.holdUntil, 'HH:mm dd/MM/yyyy')}. Quá thời gian này mà chưa báo chuyển cọc, đơn sẽ tự hủy và trả lại khung giờ.|">
+          </p>
+          <p class="mb-0"
+             th:text="${ownerView
+               ? 'Khách chưa báo chuyển cọc. Đơn chỉ được xác nhận sau khi bạn kiểm tra tiền cọc đã về tài khoản.'
+               : 'Xác nhận chắc chắn đến sân, sau đó chuyển cọc 50% theo mã QR bên dưới để hoàn tất đặt sân.'}">
+          </p>
+        </th:block>
+
+        <th:block th:if="${booking.status == 'DEPOSIT_SENT'}">
+          <h2 th:text="${ownerView ? 'Khách báo đã chuyển cọc' : 'Đang chờ chủ sân xác nhận cọc'}"></h2>
+          <p class="mb-0"
+             th:text="${ownerView
+               ? 'Kiểm tra tài khoản ngân hàng với nội dung ' + booking.transferNote() + ', rồi xác nhận bên dưới.'
+               : 'Bạn đã báo chuyển cọc. Chủ sân sẽ kiểm tra tài khoản và xác nhận đơn.'}">
+          </p>
+        </th:block>
+
+        <th:block th:if="${booking.status == 'CONFIRMED'}">
+          <h2 th:text="${booking.depositAmount == null
+            ? 'Khung giờ đã được giữ'
+            : 'Đã nhận cọc, lịch chơi được xác nhận'}"></h2>
+          <p th:if="${booking.depositAmount != null}"
+             th:text="|Chủ sân đã xác nhận nhận cọc ${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')}đ. Phần còn lại thanh toán tại sân.|">
+          </p>
+          <p th:if="${booking.depositAmount == null}">
+            Đơn đang ở trạng thái đã xác nhận.
+            Thanh toán được thực hiện trực tiếp tại sân.
+          </p>
+
+          <p class="muted mb-0">
+            Chủ sân chỉ xác nhận hoàn tất sau khi lượt chơi
+            kết thúc và đã thu tiền.
+          </p>
+        </th:block>
+
+        <th:block th:if="${booking.status == 'CANCELLED'}">
+          <h2>Đơn đã được hủy</h2>
+          <p th:if="${booking.depositForfeited}"
+             class="deposit-warning">
+            Khách hủy sau khi đã chuyển cọc nên tiền cọc
+            <strong th:text="${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')} + 'đ'"></strong>
+            không được hoàn lại.
+          </p>
+          <p th:if="${ownerView and booking.depositPaid() and !booking.depositForfeited}"
+             class="deposit-warning">
+            Chủ sân hủy đơn sau khi khách đã chuyển cọc.
+            Hãy hoàn lại tiền cọc cho khách.
+          </p>
+          <p class="mb-0">
+            Đơn này không còn giữ khung giờ.
+            Bạn có thể xem lịch hiện tại để chọn một lượt chơi khác.
+          </p>
+        </th:block>
+
+        <th:block th:if="${booking.status == 'COMPLETED'}">
+          <h2>Lượt chơi đã hoàn tất</h2>
+          <p class="mb-0">
+            Chủ sân đã xác nhận hoàn tất và thu tiền cho đơn này.
+          </p>
+        </th:block>
+      </section>
+
+      <!-- Đặt cọc 50%: khách cam kết đến sân rồi mới chuyển cọc -->
+      <section class="surface mt-4 deposit-panel"
+               th:if="${!ownerView and booking.status == 'PENDING_DEPOSIT'}">
+        <p class="eyebrow text-green">ĐẶT CỌC 50%</p>
+
+        <th:block th:if="${booking.committedAt == null}">
+          <h2>Bước 1 · Xác nhận chắc chắn đến sân</h2>
+          <p class="muted">
+            Mã QR chuyển cọc chỉ hiện sau khi bạn cam kết đến sân.
+          </p>
+
+          <div class="deposit-policy">
+            <strong>Chính sách cọc</strong>
+            <ul>
+              <li th:text="|Cọc ${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')}đ (50% giá đơn), phần còn lại trả tại sân.|"></li>
+              <li>Sau khi đã chuyển cọc, nếu bạn hủy đơn thì <b>mất cọc và không được hoàn tiền</b>.</li>
+              <li>Nếu chủ sân hủy đơn, chủ sân hoàn lại tiền cọc cho bạn.</li>
+            </ul>
+          </div>
+
+          <form th:action="@{/bookings/{id}/commit(id=${booking.id})}" method="post">
+            <div class="deposit-agreement">
+              <input id="commit-agreement" type="checkbox" required>
+              <label for="commit-agreement">
+                Tôi chắc chắn sẽ đến sân đúng giờ và đồng ý rằng
+                hủy đơn sau khi chuyển cọc sẽ mất cọc, không hoàn tiền.
+              </label>
+            </div>
+            <button class="btn btn-primary" type="submit">
+              Xác nhận chắc chắn đến sân
+            </button>
+          </form>
+        </th:block>
+
+        <th:block th:if="${booking.committedAt != null}">
+          <h2>Bước 2 · Quét mã QR để chuyển cọc</h2>
+
+          <p class="deposit-warning" data-qr-error hidden>Không tải được mã QR. Bạn có thể dùng thông tin chuyển khoản bên dưới hoặc liên hệ chủ sân qua số <strong th:text="${booking.court.owner.phone}"></strong>. Chỉ báo đã chuyển sau khi chuyển khoản thực tế.</p>
+          <div class="deposit-qr-layout" th:if="${qrUrl != null}">
+            <img class="deposit-qr"
+                 th:src="@{${qrUrl}}"
+                 width="260"
+                 height="260"
+                 alt="Mã QR chuyển khoản tiền cọc">
+
+            <dl class="deposit-transfer-info">
+              <th:block th:if="${booking.court.owner.hasBankAccount()}">
+                <div>
+                  <dt>Ngân hàng</dt>
+                  <dd th:text="${bankName}"></dd>
+                </div>
+                <div>
+                  <dt>Số tài khoản</dt>
+                  <dd><span id="transfer-account" th:text="${booking.court.owner.bankAccountNo}"></span><button type="button" class="copy-button" data-copy-target="transfer-account" aria-label="Sao chép số tài khoản"><svg th:replace="~{fragments :: icon('copy')}"></svg><span>Sao chép</span></button></dd>
+                </div>
+                <div>
+                  <dt>Chủ tài khoản</dt>
+                  <dd th:text="${booking.court.owner.bankAccountName}"></dd>
+                </div>
+              </th:block>
+              <div>
+                <dt>Số tiền cọc</dt>
+                <dd class="deposit-amount"><span id="transfer-amount" th:attr="data-copy-value=${#numbers.formatInteger(booking.depositAmount, 1, 'NONE')}" th:text="${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')}"></span>đ<button type="button" class="copy-button" data-copy-target="transfer-amount" aria-label="Sao chép số tiền cọc"><svg th:replace="~{fragments :: icon('copy')}"></svg><span>Sao chép</span></button></dd>
+              </div>
+              <div>
+                <dt>Nội dung chuyển khoản</dt>
+                <dd><code id="transfer-note" th:text="${booking.transferNote()}"></code><button type="button" class="copy-button" data-copy-target="transfer-note" aria-label="Sao chép nội dung chuyển khoản"><svg th:replace="~{fragments :: icon('copy')}"></svg><span>Sao chép</span></button></dd>
+              </div>
+            </dl>
+          </div>
+
+          <p class="deposit-policy"
+             th:if="${qrUrl != null and booking.court.owner.hasPaymentQr()}">
+            Đây là mã QR của chủ sân. Khi quét, hãy <b>tự nhập số tiền cọc</b>
+            và <b>nội dung chuyển khoản</b> như trên để chủ sân đối chiếu.
+          </p>
+
+          <p class="deposit-warning" th:if="${qrUrl == null}">
+            Chủ sân chưa cập nhật tài khoản nhận cọc.
+            Vui lòng liên hệ chủ sân qua số
+            <strong th:text="${booking.court.owner.phone}"></strong>.
+          </p>
+
+          <form th:if="${qrUrl != null}"
+                th:action="@{/bookings/{id}/deposit(id=${booking.id})}"
+                method="post"
+                onsubmit="return confirm('Bạn đã chuyển khoản tiền cọc với đúng nội dung? Sau bước này, hủy đơn sẽ mất cọc và không được hoàn tiền.');">
+            <button class="btn btn-primary" type="submit">
+              Tôi đã chuyển khoản cọc
+            </button>
+          </form>
+        </th:block>
+      </section>
+
+      <!-- Chủ sân kiểm tra cọc -->
+      <section class="surface mt-4 deposit-panel"
+               th:if="${ownerView and booking.needsDepositCheck()}">
+        <p class="eyebrow text-green">XÁC NHẬN TIỀN CỌC</p>
+        <h2>Kiểm tra tiền cọc đã về tài khoản</h2>
+        <p class="muted"
+           th:if="${booking.status == 'CANCELLED'}">
+          Khách đã hủy đơn sau khi báo chuyển cọc nên mất cọc.
+          Nếu tiền đã về, xác nhận để ghi nhận vào doanh thu.
+        </p>
+        <p class="muted"
+           th:if="${booking.status == 'DEPOSIT_SENT'}">
+          Khi bạn xác nhận, khách sẽ nhận được thông báo
+          và lịch chơi chuyển sang Đã cọc.
+        </p>
+
+        <dl class="deposit-transfer-info">
+          <div>
+            <dt>Số tiền cọc</dt>
+            <dd class="deposit-amount"
+                th:text="${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')} + 'đ'"></dd>
+          </div>
+          <div>
+            <dt>Nội dung chuyển khoản</dt>
+            <dd><code th:text="${booking.transferNote()}"></code></dd>
+          </div>
+          <div>
+            <dt>Khách báo lúc</dt>
+            <dd th:text="${#temporals.format(booking.depositSentAt, 'HH:mm dd/MM/yyyy')}"></dd>
+          </div>
+        </dl>
+
+        <div class="deposit-owner-actions">
+          <form th:action="@{/owner/bookings/{id}/deposit/confirm(id=${booking.id})}"
+                method="post"
+                onsubmit="return confirm('Xác nhận bạn đã nhận đủ tiền cọc cho đơn này?');">
+            <button class="btn btn-primary" type="submit">Đã nhận cọc</button>
+          </form>
+
+          <form th:if="${booking.status == 'DEPOSIT_SENT'}"
+                th:action="@{/owner/bookings/{id}/deposit/reject(id=${booking.id})}"
+                method="post"
+                onsubmit="return confirm('Báo khách chưa nhận được tiền cọc?');">
+            <button class="btn btn-outline-danger" type="submit">Chưa nhận được</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Đánh giá sau khi hoàn tất -->
+      <section class="surface mt-4" id="review"
+               th:if="${booking.status == 'COMPLETED' and (!ownerView or review != null)}">
+        <p class="eyebrow text-green">ĐÁNH GIÁ LƯỢT CHƠI</p>
+
+        <th:block th:if="${ownerView}">
+          <h2>Đánh giá của khách</h2>
+          <div class="review-meta">
+            <span class="stars" th:style="|--rating: ${review.rating}|"
+                  th:attr="aria-label=|${review.rating} trên 5 sao|"></span>
+            <small th:text="${#temporals.format(review.updatedAt, 'HH:mm dd/MM/yyyy')}"></small>
+          </div>
+          <p class="preserve mb-0 mt-2"
+             th:text="${review.comment ?: 'Khách không để lại nhận xét.'}"></p>
+          <div class="review-reply" th:if="${review.ownerReply != null}">
+            <strong>Phản hồi của bạn</strong>
+            <p class="preserve" th:text="${review.ownerReply}"></p>
+          </div>
+          <a class="btn btn-outline-success btn-sm mt-3"
+             th:href="@{/courts/{id}(id=${booking.court.id})} + '#review-' + ${review.id}"
+             th:text="${review.ownerReply == null ? 'Trả lời đánh giá' : 'Sửa phản hồi'}"></a>
+        </th:block>
+
+        <th:block th:if="${!ownerView}">
+          <h2 th:text="${review == null ? 'Bạn thấy sân thế nào?' : 'Đánh giá của bạn'}"></h2>
+          <p class="muted" th:if="${review == null}">
+            Đánh giá giúp người chơi khác chọn sân và giúp chủ sân phục vụ tốt hơn.
+          </p>
+
+          <form th:action="@{/bookings/{id}/review(id=${booking.id})}" method="post">
+            <p class="form-label mb-1" id="star-label">Số sao</p>
+            <fieldset class="star-input" aria-labelledby="star-label">
+              <th:block th:each="s : ${#numbers.sequence(5, 1, -1)}">
+                <input type="radio"
+                       name="rating"
+                       th:id="'star' + ${s}"
+                       th:value="${s}"
+                       th:checked="${review != null and review.rating == s}"
+                       required>
+                <label th:for="'star' + ${s}"
+                       th:title="|${s} sao|">★</label>
+              </th:block>
+            </fieldset>
+
+            <div class="mb-3">
+              <label class="form-label" for="comment">Nhận xét (không bắt buộc)</label>
+              <textarea id="comment"
+                        name="comment"
+                        class="form-control"
+                        rows="3"
+                        maxlength="1000"
+                        placeholder="Mặt sân, đèn, phục vụ, chỗ để xe…"
+                        th:text="${review?.comment}"></textarea>
+            </div>
+
+            <button class="btn btn-primary" type="submit"
+                    th:text="${review == null ? 'Gửi đánh giá' : 'Cập nhật đánh giá'}">
+              Gửi đánh giá
+            </button>
+          </form>
+
+          <div class="review-reply mt-3" th:if="${review != null and review.ownerReply != null}">
+            <strong>Phản hồi của chủ sân</strong>
+            <small th:text="${#temporals.format(review.repliedAt, 'dd/MM/yyyy')}"></small>
+            <p class="preserve" th:text="${review.ownerReply}"></p>
+          </div>
+        </th:block>
+      </section>
+    </div>
+
+    <!-- Thanh toán và thao tác -->
+    <aside class="col-lg-4">
+      <section class="surface order-action-panel">
+        <p class="eyebrow text-green">CHI TIẾT CHI PHÍ</p>
+        <h2>Tiền thuê sân</h2>
+
+        <div class="order-total">
+          <strong th:text="${#numbers.formatInteger(
+                    booking.amount, 1, 'POINT')} + 'đ'">
+          </strong>
+          <span>Cho một khung giờ 60 phút</span>
+        </div>
+
+        <dl class="order-deposit-lines" th:if="${booking.depositAmount != null}">
+          <div>
+            <dt>Tiền cọc 50%</dt>
+            <dd th:text="${#numbers.formatInteger(booking.depositAmount, 1, 'POINT')} + 'đ'"></dd>
+          </div>
+          <div>
+            <dt>Còn lại trả tại sân</dt>
+            <dd th:text="${#numbers.formatInteger(booking.remainingAmount(), 1, 'POINT')} + 'đ'"></dd>
+          </div>
+        </dl>
+
+        <div class="order-payment-note">
+          <strong th:text="${booking.status == 'COMPLETED'
+            ? 'Đã được chủ sân xác nhận thu tiền'
+            : booking.status == 'CANCELLED'
+            ? (booking.depositForfeited ? 'Đơn đã hủy · mất cọc' : 'Đơn đã hủy')
+            : booking.status == 'PENDING_DEPOSIT'
+            ? 'Chờ chuyển cọc 50%'
+            : booking.status == 'DEPOSIT_SENT'
+            ? 'Đã báo chuyển cọc · chờ chủ sân xác nhận'
+            : booking.depositAmount != null
+            ? 'Đã cọc · phần còn lại trả tại sân'
+            : 'Thanh toán trực tiếp tại sân'}">
+          </strong>
+        </div>
+
+        <p class="order-price-note">
+          Đây là giá đã lưu trong đơn khi đặt thành công.
+          Thay đổi bảng giá của sân không làm thay đổi giá đơn này.
+        </p>
+
+        <div class="order-actions"
+             th:if="${booking.active}">
+
+          <!-- Khách hủy đơn: mất cọc nếu đã báo chuyển cọc -->
+          <form th:if="${!ownerView}"
+                th:action="@{/bookings/{id}/cancel(id=${booking.id})}"
+                method="post"
+                th:attr="onsubmit=${booking.depositPaid()
+                  ? 'return confirm(''Bạn đã chuyển cọc. Hủy đơn bây giờ sẽ MẤT CỌC và không được hoàn tiền. Vẫn hủy?'');'
+                  : 'return confirm(''Bạn muốn hủy đơn và trả lại khung giờ này?'');'}">
+
+            <button class="btn btn-outline-danger w-100"
+                    type="submit"
+                    th:text="${booking.depositPaid() ? 'Hủy đơn (mất cọc)' : 'Hủy đơn đặt sân'}">
+              Hủy đơn đặt sân
+            </button>
+          </form>
+
+          <!-- Chủ sân xác nhận đã thu -->
+          <form th:if="${ownerView and booking.status == 'CONFIRMED'}"
+                th:action="@{/owner/bookings/{id}/complete(id=${booking.id})}"
+                method="post"
+                onsubmit="return confirm('Xác nhận lượt chơi đã kết thúc và bạn đã thu tiền tại sân?');">
+
+            <button class="btn btn-primary w-100"
+                    type="submit">
+              Hoàn tất và xác nhận đã thu
+            </button>
+          </form>
+
+          <!-- Chủ sân hủy đơn -->
+          <form th:if="${ownerView}"
+                th:action="@{/owner/bookings/{id}/cancel(id=${booking.id})}"
+                method="post"
+                th:attr="onsubmit=${booking.depositPaid()
+                  ? 'return confirm(''Khách đã chuyển cọc. Hủy đơn thì bạn cần hoàn cọc cho khách. Vẫn hủy?'');'
+                  : 'return confirm(''Bạn muốn hủy đơn này trước giờ chơi?'');'}">
+
+            <button class="btn btn-outline-danger w-100"
+                    type="submit">
+              Hủy đơn đặt sân
+            </button>
+          </form>
+
+          <p class="order-action-help"
+             th:if="${!ownerView}">
+            Khách hàng chỉ được hủy trước giờ bắt đầu trên 2 tiếng.
+            Hủy sau khi đã chuyển cọc sẽ mất cọc, không hoàn tiền.
+          </p>
+
+          <p class="order-action-help"
+             th:if="${ownerView}">
+            Chỉ hủy trước giờ chơi bắt đầu.
+            Chỉ hoàn tất sau khi lượt chơi kết thúc và đã thu tiền.
+          </p>
+        </div>
+
+        <a class="order-back-link"
+           th:href="${ownerView} ? @{/owner} : @{/bookings}">
+          Quay lại danh sách đơn
+        </a>
+      </section>
+    </aside>
+
+  </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>
