@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Quản lý sân')}"></head>
+
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space owner-dashboard">
+
+<div class="owner-workspace">
+<details class="owner-navigation" open><summary><svg th:replace="~{fragments :: icon('menu')}"></svg> Không gian chủ sân</summary>
+  <a class="owner-navigation-brand" th:href="@{/owner}">Quản lý sân<span>Không gian chủ sân</span></a>
+  <nav class="owner-section-links" aria-label="Các mục quản lý">
+    <a href="#owner-overview"><svg th:replace="~{fragments :: icon('grid')}"></svg>Tổng quan</a>
+    <a href="#owner-bookings"><svg th:replace="~{fragments :: icon('calendar')}"></svg>Đơn đặt sân</a>
+    <a href="#owner-courts"><svg th:replace="~{fragments :: icon('court')}"></svg>Sân của tôi</a>
+    <a th:href="@{/owner/messages}" data-open-chat><svg th:replace="~{fragments :: icon('bell')}"></svg>Tin nhắn<span class="nav-badge" th:if="${chatUnreadCount != null and chatUnreadCount > 0}" th:text="${chatUnreadCount}"></span></a>
+    <a href="#owner-revenue"><svg th:replace="~{fragments :: icon('wallet')}"></svg>Doanh thu</a>
+    <a href="#owner-filters"><svg th:replace="~{fragments :: icon('search')}"></svg>Bộ lọc</a>
+    <a th:href="@{/account} + '#bank'"><svg th:replace="~{fragments :: icon('user')}"></svg>Tài khoản nhận cọc</a>
+  </nav>
+  <p class="owner-navigation-note">Chỉ xác nhận cọc sau khi kiểm tra tiền đã về tài khoản.</p>
+</details>
+<div class="owner-workspace-content" id="owner-overview">
+  <div class="owner-dashboard-heading">
+    <div>
+      <p class="eyebrow text-green">KHÔNG GIAN CHỦ SÂN</p>
+      <h1>Một góc nhìn. Toàn bộ sân.</h1>
+      <p class="muted mb-0">
+        Theo dõi đơn đặt, cập nhật sân và quản lý doanh thu.
+      </p>
+    </div>
+
+    <a class="btn btn-primary"
+       th:href="@{/owner/courts/new}">
+      + Thêm sân mới
+    </a>
+  </div>
+
+  <div th:replace="~{fragments :: flash}"></div>
+
+  <!-- Thông báo khách đã chuyển cọc -->
+  <a class="deposit-alert"
+     th:if="${depositAlerts != null and depositAlerts > 0}"
+     th:href="@{/owner(status='DEPOSIT_SENT', from=${today.minusDays(1)}, to=${today.plusDays(30)})} + '#owner-bookings'">
+    <strong th:text="|${depositAlerts} đơn báo đã chuyển cọc|"></strong>
+    <span>Kiểm tra tài khoản ngân hàng và xác nhận nhận cọc →</span>
+  </a>
+
+  <a class="deposit-alert deposit-alert-muted"
+     th:if="${viewer != null and !viewer.canReceiveDeposit()}"
+     th:href="@{/account} + '#bank'">
+    <strong>Chưa có tài khoản nhận cọc</strong>
+    <span>Khách không thể quét QR chuyển cọc 50% cho đến khi bạn cập nhật →</span>
+  </a>
+
+  <!-- Các chỉ số -->
+  <section class="owner-stat-grid" aria-label="Tổng quan">
+
+    <article class="owner-stat-card">
+      <span class="owner-stat-label">Sân đang quản lý</span>
+
+      <strong th:text="${#lists.size(courts)}"></strong>
+
+      <small>Toàn bộ sân thuộc tài khoản</small>
+    </article>
+
+    <article class="owner-stat-card">
+      <span class="owner-stat-label">Đơn đang giữ chỗ</span>
+
+      <strong th:text="${pendingCount}"></strong>
+
+      <small>Chờ cọc, chờ xác nhận cọc và đã cọc</small>
+    </article>
+
+    <article class="owner-stat-card">
+      <span class="owner-stat-label">Đơn hoàn tất</span>
+
+      <strong th:text="${paidCount}"></strong>
+
+      <small>Theo khoảng ngày và sân đã chọn</small>
+    </article>
+
+    <article class="owner-stat-card owner-stat-revenue">
+      <span class="owner-stat-label">Doanh thu ghi nhận</span>
+
+      <strong
+        th:text="${#numbers.formatInteger(revenue, 1, 'POINT')} + 'đ'">
+      </strong>
+
+      <small th:text="|Đang giữ thêm ${#numbers.formatInteger(report.heldDeposits, 1, 'POINT')}đ tiền cọc|">
+      </small>
+    </article>
+
+  </section>
+
+  <!-- Bộ lọc -->
+  <section class="surface owner-filter-panel" id="owner-filters">
+    <div class="owner-panel-heading">
+      <div>
+        <p class="eyebrow text-green mb-2">CHỌN PHẠM VI THEO DÕI</p>
+        <h2>Bộ lọc thống kê và đơn</h2>
+      </div>
+    </div>
+
+    <form class="row g-3 align-items-end"
+          method="get"
+          th:action="@{/owner}">
+
+      <div class="col-sm-6 col-xl-3">
+        <label class="form-label" for="from">Từ ngày</label>
+        <input id="from"
+               name="from"
+               type="date"
+               class="form-control"
+               th:value="${from}"
+               required>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <label class="form-label" for="to">Đến ngày</label>
+        <input id="to"
+               name="to"
+               type="date"
+               class="form-control"
+               th:value="${to}"
+               required>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <label class="form-label" for="courtId">Sân</label>
+
+        <select id="courtId"
+                name="courtId"
+                class="form-select">
+
+          <option value="">Tất cả sân</option>
+
+          <option th:each="court : ${courts}"
+                  th:value="${court.id}"
+                  th:text="${court.name}"
+                  th:selected="${court.id == filterCourtId}">
+          </option>
+        </select>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <label class="form-label" for="status">Trạng thái đơn</label>
+
+        <select id="status"
+                name="status"
+                class="form-select">
+
+          <option value=""
+                  th:selected="${filterStatus == ''}">
+            Tất cả
+          </option>
+
+          <option value="PENDING_DEPOSIT"
+                  th:selected="${filterStatus == 'PENDING_DEPOSIT'}">
+            Chờ đặt cọc
+          </option>
+
+          <option value="DEPOSIT_SENT"
+                  th:selected="${filterStatus == 'DEPOSIT_SENT'}">
+            Chờ xác nhận cọc
+          </option>
+
+          <option value="CONFIRMED"
+                  th:selected="${filterStatus == 'CONFIRMED'}">
+            Đã cọc / đã xác nhận
+          </option>
+
+          <option value="COMPLETED"
+                  th:selected="${filterStatus == 'COMPLETED'}">
+            Hoàn tất / đã thu
+          </option>
+
+          <option value="CANCELLED"
+                  th:selected="${filterStatus == 'CANCELLED'}">
+            Đã hủy
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary" type="submit">
+          Áp dụng bộ lọc
+        </button>
+
+        <a class="btn btn-outline-secondary"
+           th:href="@{/owner}">
+          Đặt lại
+        </a>
+      </div>
+    </form>
+
+    <p class="owner-filter-note">
+      Khoảng ngày tính theo ngày chơi.
+      Bộ lọc trạng thái chỉ áp dụng cho danh sách đơn;
+      doanh thu tính đơn hoàn tất và tiền cọc giữ lại khi khách hủy.
+    </p>
+  </section>
+
+  <!-- Doanh thu -->
+  <section class="surface mt-4" id="owner-revenue">
+    <div class="owner-panel-heading">
+      <div>
+        <p class="eyebrow text-green mb-2">KẾT QUẢ TRONG KỲ</p>
+        <h2>Doanh thu theo sân</h2>
+      </div>
+
+      <span class="owner-period"
+            th:text="|${#temporals.format(from, 'dd/MM/yyyy')} – ${#temporals.format(to, 'dd/MM/yyyy')}|">
+      </span>
+    </div>
+
+    <div class="row g-4">
+
+      <div class="col-lg-5">
+        <div class="owner-revenue-summary">
+          <span>DOANH THU GHI NHẬN</span>
+
+          <strong
+            th:text="${#numbers.formatInteger(revenue, 1, 'POINT')} + 'đ'">
+          </strong>
+
+          <dl class="revenue-parts">
+            <div>
+              <dt th:text="|Tiền thuê · ${report.completedCount} đơn hoàn tất|"></dt>
+              <dd th:text="${#numbers.formatInteger(report.rentals, 1, 'POINT')} + 'đ'"></dd>
+            </div>
+            <div>
+              <dt th:text="|Cọc giữ lại · ${report.forfeitedCount} đơn khách hủy|"></dt>
+              <dd th:text="${#numbers.formatInteger(report.forfeited, 1, 'POINT')} + 'đ'"></dd>
+            </div>
+            <div class="revenue-held">
+              <dt th:text="|Cọc đang giữ · ${report.heldCount} đơn chưa chơi|"></dt>
+              <dd th:text="${#numbers.formatInteger(report.heldDeposits, 1, 'POINT')} + 'đ'"></dd>
+            </div>
+            <div class="revenue-total">
+              <dt>Tổng tiền đã nhận</dt>
+              <dd th:text="${#numbers.formatInteger(report.received(), 1, 'POINT')} + 'đ'"></dd>
+            </div>
+          </dl>
+
+          <small>
+            Cọc đang giữ chưa tính vào doanh thu vì phải hoàn lại
+            nếu chủ sân hủy đơn; khi đơn hoàn tất, cọc nằm trong tiền thuê.
+            Cọc đang giữ tính trên mọi đơn chưa chơi, không theo khoảng ngày.
+          </small>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="owner-revenue-breakdown"
+             th:if="${!byCourt.isEmpty()}">
+
+          <div class="owner-revenue-line"
+               th:each="entry : ${byCourt}">
+
+            <span th:text="${entry.key}"></span>
+
+            <strong
+              th:text="${#numbers.formatInteger(
+                entry.value, 1, 'POINT')} + 'đ'">
+            </strong>
+          </div>
+        </div>
+
+        <div class="owner-revenue-empty"
+             th:if="${byCourt.isEmpty()}">
+          <strong>Chưa có doanh thu trong kỳ</strong>
+          <p>
+            Doanh thu xuất hiện khi lượt chơi hoàn tất
+            hoặc khách hủy đơn đã cọc.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Sân của tôi -->
+  <section class="surface mt-4" id="owner-courts">
+    <div class="owner-panel-heading">
+      <div>
+        <p class="eyebrow text-green mb-2">KHÔNG GIAN THỂ THAO</p>
+        <h2>Sân của tôi</h2>
+      </div>
+
+      <span class="owner-count-badge"
+            th:text="${#lists.size(courts)} + ' sân'">
+      </span>
+    </div>
+
+    <div class="table-responsive"
+         th:if="${!#lists.isEmpty(courts)}">
+
+      <table class="table align-middle owner-courts-table">
+        <caption class="visually-hidden">
+          Các sân thuộc tài khoản chủ sân
+        </caption>
+
+        <thead>
+        <tr>
+          <th scope="col">Thông tin sân</th>
+          <th scope="col">Khu vực</th>
+          <th scope="col">Giá từ / giờ</th>
+          <th scope="col">Trạng thái</th>
+          <th scope="col">Thao tác</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="court : ${courts}">
+
+          <td>
+            <div class="owner-court-info">
+              <a th:href="@{/courts/{id}(id=${court.id})}"
+                 th:text="${court.name}">
+              </a>
+              <span th:text="${court.sport}"></span>
+            </div>
+          </td>
+
+          <td>
+            <span class="owner-court-area"
+                  th:text="${court.area}">
+            </span>
+          </td>
+
+          <td>
+            <strong class="owner-court-price"
+                    th:text="${#numbers.formatInteger(
+                      court.minPrice, 1, 'POINT')} + 'đ'">
+            </strong>
+          </td>
+
+          <td>
+            <span class="owner-court-status"
+                  th:classappend="${court.active ? '' : 'is-inactive'}"
+                  th:text="${court.active
+                    ? 'Đang nhận đặt'
+                    : 'Ngừng nhận đặt'}">
+            </span>
+          </td>
+
+          <td>
+            <div class="owner-court-actions">
+              <a class="btn btn-outline-success btn-sm text-nowrap"
+                 th:href="@{/owner/courts/{id}/edit(id=${court.id})}">
+                Chỉnh sửa
+              </a>
+
+              <a class="btn btn-outline-secondary btn-sm text-nowrap"
+                 th:href="@{/courts/{id}(id=${court.id})}">
+                Lịch / khóa giờ
+              </a>
+            </div>
+          </td>
+
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state"
+         th:if="${#lists.isEmpty(courts)}">
+      <h3>Bắt đầu với sân đầu tiên</h3>
+      <p>
+        Thêm thông tin sân, hình ảnh, giờ hoạt động và giá thuê.
+      </p>
+
+      <a class="btn btn-primary"
+         th:href="@{/owner/courts/new}">
+        + Thêm sân
+      </a>
+    </div>
+  </section>
+
+  <!-- Đơn đặt -->
+  <section class="surface mt-4" id="owner-bookings">
+    <div class="owner-panel-heading">
+      <div>
+        <p class="eyebrow text-green mb-2">THEO DÕI KHÁCH ĐẶT</p>
+        <h2>Đơn đặt sân</h2>
+      </div>
+
+      <span class="owner-count-badge"
+            th:text="${bookings.totalElements} + ' đơn phù hợp'">
+      </span>
+    </div>
+
+    <p class="owner-booking-guidance">
+      Chọn “Chi tiết” để xem và xử lý đơn.
+      Xác nhận cọc khi tiền đã về tài khoản;
+      chỉ hoàn tất sau khi lượt chơi kết thúc và đã thu phần còn lại.
+    </p>
+
+    <div th:replace="~{booking-table :: table(true)}"></div>
+
+    <nav class="pager mt-4"
+         aria-label="Phân trang đơn của chủ sân"
+         th:if="${bookings.totalPages > 1}">
+
+      <a class="btn btn-outline-secondary btn-sm"
+         th:if="${bookings.hasPrevious()}"
+         th:href="@{/owner(
+           from=${from},
+           to=${to},
+           courtId=${filterCourtId},
+           status=${filterStatus},
+           page=${bookings.number - 1})}">
+        ← Trước
+      </a>
+
+      <span class="muted"
+            th:text="|Trang ${bookings.number + 1}/${bookings.totalPages}|">
+      </span>
+
+      <a class="btn btn-outline-secondary btn-sm"
+         th:if="${bookings.hasNext()}"
+         th:href="@{/owner(
+           from=${from},
+           to=${to},
+           courtId=${filterCourtId},
+           status=${filterStatus},
+           page=${bookings.number + 1})}">
+        Sau →
+      </a>
+    </nav>
+  </section>
+
+</div>
+</div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

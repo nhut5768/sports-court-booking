@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Thông tin sân')}"></head>
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space court-editor">
+  <a class="back-link" th:href="@{/owner}">← Quay lại quản lý sân</a>
+
+  <div class="court-editor-heading">
+    <div>
+      <p class="eyebrow text-green">QUẢN LÝ THÔNG TIN SÂN</p>
+      <h1 th:text="${courtId == null ? 'Thêm sân mới' : 'Chỉnh sửa sân'}">
+        Thông tin sân
+      </h1>
+      <p class="muted">
+        Cập nhật thông tin, giá thuê và hình ảnh để khách dễ dàng chọn sân.
+      </p>
+    </div>
+    <span class="court-editor-badge"
+          th:text="${courtId == null ? 'Sân mới' : 'Đang chỉnh sửa'}">
+    </span>
+  </div>
+
+  <div th:replace="~{fragments :: flash}"></div>
+
+  <form th:action="@{/owner/courts/save}"
+        method="post"
+        enctype="multipart/form-data"
+        th:object="${form}">
+
+    <input th:if="${courtId != null}"
+           type="hidden"
+           name="id"
+           th:value="${courtId}">
+
+    <div th:if="${#fields.hasAnyErrors()}"
+         class="alert alert-danger"
+         role="alert">
+      <strong>Vui lòng kiểm tra lại thông tin:</strong>
+      <ul class="mb-0 mt-2">
+        <li th:each="e : ${#fields.allErrors()}" th:text="${e}"></li>
+      </ul>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        <!-- Thông tin cơ bản -->
+        <section class="surface court-editor-section">
+          <div class="court-editor-section-heading">
+            <span class="court-editor-number">01</span>
+            <div>
+              <h2>Thông tin cơ bản</h2>
+              <p>Tên sân, môn thể thao và địa điểm.</p>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label for="name" class="form-label">Tên sân *</label>
+              <input id="name"
+                     th:field="*{name}"
+                     class="form-control"
+                     maxlength="100"
+                     placeholder="Ví dụ: Cầu lông Bình Minh – Sân 01"
+                     required>
+            </div>
+
+            <div class="col-md-4">
+              <label for="sport" class="form-label">Môn thể thao *</label>
+              <select id="sport"
+                      class="form-select"
+                      th:field="*{sport}"
+                      required>
+                <option value="">Chọn môn</option>
+                <option th:each="s : ${sports}"
+                        th:value="${s}"
+                        th:text="${s}"></option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label for="area" class="form-label">Khu vực *</label>
+              <select id="area"
+                      class="form-select"
+                      th:field="*{area}"
+                      required>
+                <option value="">Chọn khu vực</option>
+                <option th:each="a : ${areas}"
+                        th:value="${a}"
+                        th:text="${a}"></option>
+              </select>
+            </div>
+
+            <div class="col-md-8">
+              <label for="address" class="form-label">Địa chỉ *</label>
+              <input id="address"
+                     th:field="*{address}"
+                     class="form-control"
+                     maxlength="250"
+                     placeholder="Số nhà, tên đường, phường, thành phố"
+                     required>
+            </div>
+
+            <div class="col-12">
+              <label for="amenities" class="form-label">Tiện ích</label>
+              <input id="amenities"
+                     th:field="*{amenities}"
+                     class="form-control"
+                     maxlength="1000"
+                     placeholder="Đèn chiếu sáng, nhà vệ sinh, chỗ để xe…">
+            </div>
+
+            <div class="col-12">
+              <label for="description" class="form-label">Giới thiệu sân</label>
+              <textarea id="description"
+                        th:field="*{description}"
+                        class="form-control"
+                        rows="5"
+                        maxlength="2000"
+                        placeholder="Giới thiệu mặt sân, không gian và những lưu ý khi đến chơi…"></textarea>
+              <small class="court-editor-help">Tối đa 2.000 ký tự.</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- Giờ hoạt động và giá -->
+        <section class="surface court-editor-section mt-4">
+          <div class="court-editor-section-heading">
+            <span class="court-editor-number">02</span>
+            <div>
+              <h2>Giờ hoạt động và giá thuê</h2>
+              <p>Mỗi khung giờ đặt sân kéo dài 60 phút.</p>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="price" class="form-label">Giá mặc định / giờ *</label>
+              <div class="input-group">
+                <input id="price"
+                       type="number"
+                       th:field="*{price}"
+                       class="form-control"
+                       min="1000"
+                       max="10000000"
+                       step="1000"
+                       placeholder="120000"
+                       required>
+                <span class="input-group-text">đ</span>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label for="openHour" class="form-label">Giờ mở cửa *</label>
+              <input id="openHour"
+                     type="number"
+                     th:field="*{openHour}"
+                     min="0"
+                     max="23"
+                     step="1"
+                     class="form-control"
+                     required>
+              <small class="court-editor-help">Nhập giờ từ 0 đến 23.</small>
+            </div>
+
+            <div class="col-md-4">
+              <label for="closeHour" class="form-label">Giờ đóng cửa *</label>
+              <input id="closeHour"
+                     type="number"
+                     th:field="*{closeHour}"
+                     min="1"
+                     max="24"
+                     step="1"
+                     class="form-control"
+                     required>
+              <small class="court-editor-help">Nhập giờ từ 1 đến 24.</small>
+            </div>
+          </div>
+
+          <div class="court-editor-peak">
+            <div class="court-editor-peak-heading">
+              <strong>Giá giờ cao điểm</strong>
+              <span>Tùy chọn</span>
+            </div>
+
+            <p class="muted">
+              Nếu áp dụng, nhập đủ cả ba ô. Khung cao điểm phải nằm
+              trong giờ mở cửa.
+            </p>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="peakStart" class="form-label">Từ giờ</label>
+                <input id="peakStart"
+                       type="number"
+                       th:field="*{peakStart}"
+                       min="0"
+                       max="23"
+                       step="1"
+                       placeholder="17"
+                       class="form-control">
+              </div>
+
+              <div class="col-md-4">
+                <label for="peakEnd" class="form-label">Đến giờ</label>
+                <input id="peakEnd"
+                       type="number"
+                       th:field="*{peakEnd}"
+                       min="1"
+                       max="24"
+                       step="1"
+                       placeholder="22"
+                       class="form-control">
+              </div>
+
+              <div class="col-md-4">
+                <label for="peakPrice" class="form-label">Giá cao điểm / giờ</label>
+                <div class="input-group">
+                  <input id="peakPrice"
+                         type="number"
+                         th:field="*{peakPrice}"
+                         min="1000"
+                         max="10000000"
+                         step="1000"
+                         placeholder="180000"
+                         class="form-control">
+                  <span class="input-group-text">đ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="court-editor-note mb-0">
+            Ví dụ: sân mở từ 6 đến 22 giờ thì khung cao điểm có thể là
+            17 đến 22 giờ. Giá mới chỉ áp dụng cho các đơn đặt mới.
+          </p>
+        </section>
+
+        <!-- Tải ảnh -->
+        <section class="surface court-editor-section mt-4">
+          <div class="court-editor-section-heading">
+            <span class="court-editor-number">03</span>
+            <div>
+              <h2>Hình ảnh sân</h2>
+              <p>Ảnh rõ nét giúp khách hình dung không gian chơi.</p>
+            </div>
+          </div>
+
+          <div class="court-editor-upload">
+            <span class="court-editor-upload-icon" aria-hidden="true"><svg th:replace="~{fragments :: icon('upload')}"></svg></span>
+            <h3>Thêm ảnh sân của bạn</h3>
+            <p>Ưu tiên ảnh ngang, thể hiện rõ mặt sân và không gian xung quanh.</p>
+
+            <label for="photos" class="form-label">Chọn ảnh từ máy</label>
+            <input id="photos"
+                   name="photos"
+                   type="file"
+                   class="form-control"
+                   accept="image/jpeg,image/png,image/webp"
+                   aria-describedby="photos-help"
+                   multiple>
+
+            <small id="photos-help" class="court-editor-help">
+              JPEG, PNG hoặc WEBP · Tối đa <span th:text="${@environment.getProperty('spring.servlet.multipart.max-file-size')}">10MB</span>/ảnh · Tối đa 8 ảnh mỗi sân.
+            </small>
+          </div>
+
+          <p class="court-editor-help mb-0 mt-3">
+            Ảnh được tải lên khi bạn bấm “Lưu thông tin sân”.
+            Khi chỉnh sửa, để trống mục này nếu không cần thêm ảnh.
+          </p>
+        </section>
+      </div>
+
+      <!-- Cột trạng thái và lưu -->
+      <aside class="col-lg-4">
+        <div class="surface court-editor-publish">
+          <p class="eyebrow text-green">TRẠNG THÁI HOẠT ĐỘNG</p>
+          <h2>Sẵn sàng nhận đặt?</h2>
+          <p class="muted">
+            Kiểm tra thông tin và bảng giá trước khi lưu.
+          </p>
+
+          <div class="court-editor-active">
+            <label class="form-check mb-0" for="active">
+              <input id="active"
+                     type="checkbox"
+                     th:field="*{active}"
+                     class="form-check-input">
+              <span class="form-check-label">Đang nhận đặt sân</span>
+            </label>
+          </div>
+
+          <p class="court-editor-help">
+            Tắt nhận đặt không tự động hủy các đơn đã có.
+          </p>
+
+          <hr>
+
+          <div class="court-editor-checklist">
+            <p><span>01</span> Tên và địa chỉ sân chính xác.</p>
+            <p><span>02</span> Giờ đóng cửa sau giờ mở cửa.</p>
+            <p><span>03</span> Giá thuê được nhập bằng VNĐ.</p>
+            <p><span>04</span> Ảnh đúng với sân đang giới thiệu.</p>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">
+            Lưu thông tin sân
+          </button>
+
+          <a class="btn btn-outline-secondary w-100 mt-2"
+             th:href="@{/owner}">
+            Quay lại quản lý
+          </a>
+
+          <small class="court-editor-help text-center mt-3">
+            Các mục có dấu * là bắt buộc.
+          </small>
+        </div>
+      </aside>
+    </div>
+  </form>
+
+  <!-- Các form xóa ảnh nằm ngoài form lưu sân -->
+  <section class="surface court-editor-section mt-4"
+           th:if="${courtId != null}">
+    <div class="court-editor-section-heading">
+      <span class="court-editor-number">04</span>
+      <div>
+        <h2>Ảnh hiện có</h2>
+        <p>Những hình ảnh đã được lưu cho sân này.</p>
+      </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(courtImages)}"
+         class="court-editor-images-empty">
+      <strong>Sân chưa có hình ảnh</strong>
+      <p class="mb-0">Chọn ảnh ở phía trên rồi lưu thông tin sân để thêm ảnh.</p>
+    </div>
+
+    <div class="court-editor-image-grid"
+         th:unless="${#lists.isEmpty(courtImages)}">
+      <article class="court-editor-image-card"
+               th:each="img : ${courtImages}">
+        <a th:href="@{/media/courts/{id}/{file}(
+             id=${courtId},file=${img.storedName})}"
+           target="_blank"
+           rel="noopener noreferrer">
+          <img th:src="@{/media/courts/{id}/{file}(
+                 id=${courtId},file=${img.storedName})}"
+               alt="Ảnh sân đã tải lên"
+               loading="lazy">
+        </a>
+
+        <div class="court-editor-image-actions">
+          <span>Ảnh đã lưu</span>
+          <form th:action="@{/owner/courts/{id}/images/{imageId}/delete(
+                  id=${courtId},imageId=${img.id})}"
+                method="post"
+                onsubmit="return confirm('Bạn muốn xóa ảnh này khỏi sân? Thông tin đang sửa chưa lưu sẽ không được giữ lại.');">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              Xóa ảnh
+            </button>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>
