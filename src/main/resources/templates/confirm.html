@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Xác nhận đặt sân')}"></head>
+
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space confirm-page">
+<a class="cf-back"
+     th:href="@{/courts/{id}(id=${court.id},date=${date})}">
+    ← Chọn lại khung giờ
+  </a>
+
+  <div th:replace="~{fragments :: flash}"></div>
+
+  <div class="cf-heading">
+    <p class="cf-eyebrow">KIỂM TRA THÔNG TIN</p>
+    <h1>Xác nhận đặt sân</h1>
+    <p>Kiểm tra sân, ngày chơi và giá trước khi xác nhận.</p>
+  </div>
+
+  <div class="cf-steps" aria-label="Các bước đặt sân">
+    <span class="cf-step cf-step-done">
+      <b>1</b> Chọn sân và giờ
+    </span>
+    <span class="cf-step cf-step-current" aria-current="step">
+      <b>2</b> Xác nhận đặt sân
+    </span>
+    <span class="cf-step">
+      <b>3</b> Chuyển cọc và chờ xác nhận
+    </span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <section class="cf-card">
+        <p class="cf-eyebrow">SÂN BẠN ĐÃ CHỌN</p>
+
+        <span class="cf-sport" th:text="${court.sport}"></span>
+
+        <h2 class="cf-court-name" th:text="${court.name}"></h2>
+
+        <p class="cf-address" th:text="${court.address}"></p>
+
+        <dl class="cf-facts">
+          <div>
+            <dt>NGÀY CHƠI</dt>
+            <dd th:text="${#temporals.format(date,'dd/MM/yyyy')}"></dd>
+          </div>
+
+          <div>
+            <dt>KHUNG GIỜ</dt>
+            <dd th:text="${label}"></dd>
+          </div>
+
+          <div>
+            <dt>THỜI LƯỢNG</dt>
+            <dd>60 phút</dd>
+          </div>
+
+          <div>
+            <dt>KHU VỰC</dt>
+            <dd th:text="${court.area}"></dd>
+          </div>
+        </dl>
+
+        <p class="cf-notice">
+          Khung giờ chưa được giữ khi bạn đang xem trang này.
+          Hệ thống sẽ kiểm tra lại khi bạn xác nhận đặt sân.
+        </p>
+      </section>
+
+      <section class="cf-card mt-4">
+        <p class="cf-eyebrow">THÔNG TIN CẦN BIẾT</p>
+        <h2 class="cf-policy-title">Trước khi xác nhận</h2>
+
+        <div class="cf-policy">
+          <span class="cf-policy-number">01</span>
+          <div>
+            <h3>Đặt cọc 50% qua mã QR</h3>
+            <p>
+              Sau khi giữ khung giờ, bạn xác nhận chắc chắn đến sân
+              rồi chuyển cọc 50% bằng mã QR. Phần còn lại trả tại sân.
+              Khung giờ chỉ được giữ 30 phút nếu bạn chưa báo chuyển cọc.
+            </p>
+          </div>
+        </div>
+
+        <div class="cf-policy">
+          <span class="cf-policy-number">02</span>
+          <div>
+            <h3>Giá được lưu trong đơn</h3>
+            <p>
+              Giá của đơn đặt thành công không thay đổi khi
+              chủ sân cập nhật bảng giá sau đó.
+            </p>
+          </div>
+        </div>
+
+        <div class="cf-policy">
+          <span class="cf-policy-number">03</span>
+          <div>
+            <h3>Chính sách hủy</h3>
+            <p>
+              Khách hàng chỉ được hủy khi còn hơn 2 tiếng
+              trước giờ bắt đầu. Hủy sau khi đã chuyển cọc
+              sẽ mất cọc, không được hoàn tiền.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="col-lg-4">
+      <section class="cf-card cf-checkout">
+        <p class="cf-eyebrow">CHI TIẾT CHI PHÍ</p>
+        <h2>Tiền thuê sân</h2>
+
+        <div class="cf-payment-row">
+          <span>Thời lượng</span>
+          <strong>60 phút</strong>
+        </div>
+
+        <div class="cf-total">
+          <span>Thành tiền</span>
+          <strong th:text="${#numbers.formatInteger(price,1,'POINT')} + 'đ'">
+          </strong>
+        </div>
+
+        <div class="cf-payment-row mt-3">
+          <span>Cọc 50% qua QR</span>
+          <strong th:text="${#numbers.formatInteger(deposit,1,'POINT')} + 'đ'"></strong>
+        </div>
+
+        <div class="cf-payment-row mt-3"><span>Còn lại trả tại sân</span><strong th:text="${#numbers.formatInteger(price.subtract(deposit),1,'POINT')} + 'đ'"></strong></div><div class="cf-payment-method">
+          Cọc 50% chuyển khoản, phần còn lại trả tại sân
+        </div>
+
+        <form method="post" th:action="@{/bookings}">
+          <input type="hidden" name="courtId" th:value="${court.id}">
+          <input type="hidden" name="date" th:value="${date}">
+          <input type="hidden" name="hour" th:value="${hour}">
+
+          <div class="cf-agreement">
+            <input id="confirm-agreement"
+                   type="checkbox"
+                   required>
+            <label for="confirm-agreement">
+              Tôi đã kiểm tra sân, ngày, giờ, giá và đồng ý
+              chính sách đặt cọc 50%.
+            </label>
+          </div>
+
+          <button type="submit"
+                  class="btn btn-primary w-100 cf-submit">
+            Giữ khung giờ và đặt cọc
+          </button>
+        </form>
+
+        <a class="cf-change"
+           th:href="@{/courts/{id}(id=${court.id},date=${date})}">
+          Chọn lại khung giờ
+        </a>
+
+        <p class="cf-checkout-note">
+          Sau khi đặt thành công, bạn có thể xem thông tin
+          đơn trong mục “Lịch của tôi”.
+        </p>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>
