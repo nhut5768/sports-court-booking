@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <title th:text="${title} + ' | Sân Nhà'">Sân Nhà</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <link rel="stylesheet" th:href="@{/css/platform.css}">
+  <script defer th:src="@{/vendor/san-nha-ui.js}"></script>
+  <script defer th:src="@{/vendor/san-nha-assistant.js}"></script>
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+
+<body>
+<svg th:fragment="icon(name)" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" th:switch="${name}">
+  <g th:case="'arrow'"><path d="M5 12h14m-6-6 6 6-6 6"/></g>
+  <g th:case="'copy'"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></g>
+  <g th:case="'upload'"><path d="M12 16V3m-5 5 5-5 5 5M3 16v5h18v-5"/></g>
+  <g th:case="'image'"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1"/><path d="m3 17 5-5 4 4 4-6 5 7"/></g>
+  <g th:case="'check'"><path d="m5 12 4 4L19 6"/></g>
+  <g th:case="'calendar'"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18M8 15h2M14 15h2"/></g>
+  <g th:case="'court'"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M3 12h18M7 4v16M17 4v16"/></g>
+  <g th:case="'menu'"><path d="M4 6h16M4 12h16M4 18h16"/></g>
+  <g th:case="'pin'"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></g>
+  <g th:case="'search'"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></g>
+  <g th:case="'bell'"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></g>
+  <g th:case="'grid'"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></g>
+  <g th:case="'user'"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></g>
+  <g th:case="'wallet'"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M16 13h5v5h-5zM6 5V3h12v2"/></g>
+</svg>
+
+<header th:fragment="siteHeader" class="site-nav">
+  <a class="skip-link" href="#main-content">Đi đến nội dung</a>
+  <nav class="container nav-bar" aria-label="Điều hướng chính">
+    <a class="brand" th:href="@{/}" aria-label="Sân Nhà — Trang chủ"><span class="brand-mark"><svg th:replace="~{fragments :: icon('court')}"></svg></span><span class="brand-wordmark">Sân Nhà<span class="brand-dot">.</span><small>HẸN NHAU TRÊN SÂN</small></span></a>
+    <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Mở menu điều hướng">
+    <label class="nav-toggle-label" for="nav-toggle"><svg th:replace="~{fragments :: icon('menu')}"></svg><span>Menu</span></label>
+    <div class="nav-links">
+      <a sec:authorize="isAnonymous()" th:href="@{/register/owner}">Dành cho chủ sân</a>
+      <a th:href="@{/}"><svg th:replace="~{fragments :: icon('search')}"></svg>Tìm sân</a>
+      <a sec:authorize="hasRole('CUSTOMER')" th:href="@{/bookings}"><svg th:replace="~{fragments :: icon('calendar')}"></svg>Lịch của tôi</a>
+      <a sec:authorize="hasRole('CUSTOMER')" th:href="@{/bookings} + '#notifications'"><svg th:replace="~{fragments :: icon('bell')}"></svg><span>Thông báo</span><span class="nav-badge" th:if="${unreadNotifications != null and unreadNotifications > 0}" th:text="${unreadNotifications}" th:aria-label="|${unreadNotifications} thông báo chưa đọc|"></span></a>
+      <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Quản trị tài khoản</a>
+      <a sec:authorize="hasRole('OWNER')" th:href="@{/owner}"><svg th:replace="~{fragments :: icon('grid')}"></svg>Quản lý sân<span class="nav-badge" th:if="${depositAlerts != null and depositAlerts > 0}" th:text="${depositAlerts}" th:aria-label="|${depositAlerts} đơn chờ xác nhận cọc|"></span></a>
+      <a sec:authorize="hasAnyRole('CUSTOMER','OWNER')" th:href="@{/messages}" data-open-chat>Tin nhắn<span class="nav-badge" data-chat-unread th:if="${chatUnreadCount != null and chatUnreadCount > 0}" th:text="${chatUnreadCount}"></span></a>
+      <details sec:authorize="isAuthenticated()" class="account-menu"><summary><svg th:replace="~{fragments :: icon('user')}"></svg>Tài khoản</summary><div class="account-menu-panel">
+        <span class="account-menu-name" th:text="${viewer?.name}"></span>
+        <a th:href="@{/account}">Hồ sơ của tôi</a><a th:href="@{/account/password}">Đổi mật khẩu</a>
+        <form th:action="@{/logout}" method="post"><button class="btn btn-outline-secondary w-100" type="submit">Đăng xuất</button></form>
+      </div></details>
+      <a sec:authorize="isAnonymous()" th:href="@{/login}">Đăng nhập</a>
+      <a sec:authorize="isAnonymous()" class="btn btn-primary btn-sm" th:href="@{/register}">Tạo tài khoản</a>
+    </div>
+  </nav>
+</header>
+
+<div th:fragment="flash">
+  <div th:if="${success}" class="alert alert-success" role="status" th:text="${success}"></div>
+  <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+  <div th:if="${param.logout != null}" class="alert alert-success" role="status">Bạn đã đăng xuất.</div>
+</div>
+
+<th:block th:fragment="pager(page, url)">
+  <nav class="pager" th:if="${page != null and page.totalPages > 1}">
+    <a class="btn btn-outline-secondary btn-sm"
+       th:if="${page.hasPrevious()}"
+       th:href="@{${url}(page=${page.number - 1})}">Trước</a>
+    <span class="muted" th:text="|Trang ${page.number + 1}/${page.totalPages}|"></span>
+    <a class="btn btn-outline-secondary btn-sm"
+       th:if="${page.hasNext()}"
+       th:href="@{${url}(page=${page.number + 1})}">Sau</a>
+  </nav>
+</th:block>
+
+<footer th:fragment="footer" class="site-footer">
+  <div class="container footer-grid"><div><a class="brand" th:href="@{/}"><span class="brand-mark"><svg th:replace="~{fragments :: icon('court')}"></svg></span>Sân Nhà.</a><p>Một sân chơi phù hợp.<br>Một cuộc hẹn đáng mong chờ.</p><span class="footer-project-tagline">Website đặt sân thể thao trực tuyến</span></div>
+    <nav aria-label="Khám phá"><strong>Khám phá</strong><a th:href="@{/}">Tìm sân thể thao</a><a th:href="@{/} + '#how-it-works'">Hướng dẫn đặt sân</a></nav>
+    <nav aria-label="Tài khoản"><strong>Tài khoản</strong><a sec:authorize="isAnonymous()" th:href="@{/login}">Đăng nhập</a><a sec:authorize="isAnonymous()" th:href="@{/register}">Đăng ký</a><a sec:authorize="isAuthenticated()" th:href="@{/account}">Hồ sơ cá nhân</a><a sec:authorize="hasRole('CUSTOMER')" th:href="@{/bookings}">Lịch của tôi</a><a sec:authorize="hasRole('OWNER')" th:href="@{/owner}">Quản lý sân</a></nav>
+  </div><div class="container footer-bottom"><span>Sân Nhà · Đồ án HKDN · Nhóm 2</span><span>Đặt cọc 50% · Chủ sân xác nhận thủ công</span></div>
+  <div class="sn-assistant" th:if="${viewer == null or !viewer.admin}" data-assistant th:data-endpoint="@{/api/assistant}" th:data-home="@{/}" th:data-chat-endpoint="@{/api/messages}" th:data-role="${viewer != null ? viewer.role : ''}" th:data-account-id="${viewer != null ? viewer.id : 0}">
+    <button type="button" class="sn-chat-launch" aria-label="Mở Chat Sân Nhà" aria-expanded="false" aria-controls="sn-chat-panel">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-8 8H5l-3 2v-10a9 9 0 0 1 18 0Z"/><path d="M7 11h8M7 15h5"/></svg>
+      <span>Chat Sân Nhà</span>
+    </button>
+    <section id="sn-chat-panel" class="sn-chat-panel" role="dialog" aria-labelledby="sn-chat-title" hidden>
+      <header class="sn-chat-heading"><div><span class="sn-chat-eyebrow">ĐỒNG HÀNH CÙNG BẠN</span><h2 id="sn-chat-title">Chat Sân Nhà</h2></div><button type="button" class="sn-chat-close" aria-label="Đóng trợ lý">×</button></header>
+      <div class="sn-chat-tools"><button type="button" data-chat-ai>Hỏi AI</button><button type="button" data-chat-owners>Nhắn chủ sân</button><button type="button" data-chat-inbox>Hội thoại <span data-unified-unread></span></button></div>
+      <p class="sn-chat-peer" role="status">AI hỗ trợ tìm sân. Bạn cũng có thể chọn chủ sân để trao đổi trực tiếp.</p>
+      <p class="sn-chat-notice">Trợ lý AI là mục riêng. Tin nhắn chủ sân do chủ sân trực tiếp trả lời. Nội dung bạn gửi có thể được xử lý bởi Gemini; không gửi thông tin nhạy cảm.</p>
+      <div class="sn-chat-suggestions" aria-label="Gợi ý hỏi AI"><button type="button">Tìm sân cầu lông</button><button type="button">Sân nào còn trống tối nay?</button><button type="button">Hướng dẫn hủy đặt sân</button></div>
+      <button type="button" class="sn-chat-older" hidden>Tải tin nhắn trước</button>
+      <div class="sn-chat-messages" role="log" aria-label="Hội thoại với trợ lý" aria-live="polite" aria-relevant="additions"><p class="sn-chat-bubble sn-chat-bot">Chào bạn! Bạn muốn chơi môn gì, ở đâu và vào thời gian nào?</p></div>
+      <p class="sn-chat-status" role="status" aria-live="polite"></p>
+      <form class="sn-chat-form" method="post" th:action="@{/api/assistant/messages}">
+        <label class="visually-hidden" for="sn-chat-input">Tin nhắn cho trợ lý</label>
+        <textarea id="sn-chat-input" name="message" rows="1" maxlength="1000" placeholder="Bạn muốn tìm sân ở đâu?" required></textarea>
+        <button type="submit" aria-label="Gửi tin nhắn">Gửi</button>
+      </form>
+      <div class="sn-chat-bottom"><span>Tối đa 1.000 ký tự · Chỉ tư vấn</span><button type="button" class="sn-chat-reset">Xóa hội thoại</button></div>
+    </section>
+  </div>
+</footer>
+</body>
+</html>
