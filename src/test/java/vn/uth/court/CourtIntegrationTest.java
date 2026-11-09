@@ -225,7 +225,11 @@ class CourtIntegrationTest {
     assertThat(home).contains("how-it-works", "/vendor/san-nha-ui.js", "Nhóm 2");
     assertThat(home).doesNotContain("account-menu-panel", "fonts.googleapis.com");
     String filtered = preview("filtered", get("/").param("sport", "Cầu lông").param("minPrice", "100000"));
-    assertThat(filtered).contains("value=\"100000\"", "selected=\"selected\"");
+    assertThat(filtered).contains("value=\"100000\"");
+    assertThat(filtered).containsPattern(
+        "(?s)<input\\b(?=[^>]*\\bid=\"hero-sport\")(?=[^>]*\\bvalue=\"Cầu lông\")(?=[^>]*\\blist=\"search-sport-options\")[^>]*>");
+    assertThat(filtered).containsPattern(
+        "(?s)<datalist\\b[^>]*\\bid=\"search-sport-options\"[^>]*>.*?</datalist>");
     preview("login", get("/login"));
     preview("register", get("/register"));
     preview("detail", get("/courts/" + court.getId()).param("date", day.toString()));

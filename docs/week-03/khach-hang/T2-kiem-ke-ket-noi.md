@@ -33,4 +33,16 @@ Chưa chạy lại kiểm thử trong lần kiểm kê ngày 09/11/2026. Không 
 
 ## Phạm vi commit đề xuất
 
-Chỉ bổ sung bản kiểm kê này cho công việc T2 hiện tại trên nhánh `week3/nhu-luong-khach-hang`, tạo từ `main` của repo `nhut5768/sports-court-booking`. Đã đối chiếu các kết nối trên mã nguồn `main`. Các tệp mã nguồn liệt kê ở trên là thành phần tích hợp cần tham chiếu, không phải toàn bộ mã mới để đưa lại vào commit.
+Chỉ bổ sung bản kiểm kê này cho công việc T2 hiện tại trên nhánh `KAN-25-hoan-thiện-kết-nối-luồng-tim-san-va-xac-nhận-dặt-san`, tạo từ `main` của repo `nhut5768/sports-court-booking`. Đã đối chiếu các kết nối trên mã nguồn `main`. Các tệp mã nguồn liệt kê ở trên là thành phần tích hợp cần tham chiếu, không phải toàn bộ mã mới để đưa lại vào commit.
+
+## Cập nhật từ bản local
+
+- Đồng bộ `home.html`: ảnh sân thực tế làm ảnh đầu trang khi có ảnh, ô môn thể thao dùng datalist, hướng dẫn và trạng thái danh mục sân.
+- Đồng bộ `detail.html`: bổ sung class giao diện trang chi tiết.
+- Đồng bộ kiểm thử giao diện ô chọn môn trong `CourtIntegrationTest` với datalist.
+- Bổ sung `customer-discovery.css` và khai báo trong `fragments.html` để tải các kiểu giao diện cần thiết. Ảnh `owner-workspace-v1.png` đã có và giống bản local.
+- Không đưa thay đổi thử nghiệm giữ ngữ cảnh tìm kiếm vào commit này; liên kết quay lại vẫn về `/` như mã tích hợp hiện có.
+
+### Kết quả xác minh ngày 09/11/2026
+
+Chạy `mvn -Dtest=CourtIntegrationTest test` trong checkout mới từ repo. Build dừng ở bước biên dịch vì mã nền thiếu các lớp được tham chiếu, gồm `AccountService`, `ReviewService`, `AccountRepository`, `NotFoundException`. Các lớp này không có trong cây mã nguồn main đã lấy; lỗi không bắt nguồn từ thay đổi template/CSS của commit này. Chưa có kết quả kiểm thử mới; cần tích hợp các thành phần nền còn thiếu rồi chạy lại trước khi merge.
