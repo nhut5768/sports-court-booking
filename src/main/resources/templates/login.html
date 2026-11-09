@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đăng nhập')}"></head>
+<body class="sn-app sn-login">
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container login-page">
+  <div class="login-layout">
+
+    <!-- Giới thiệu -->
+    <section class="login-showcase">
+      <div class="login-showcase-content">
+        <span class="login-kicker">HẸN BẠN TRÊN SÂN</span>
+
+        <h1>Sân đã sẵn sàng<br>Còn bạn thì sao?</h1>
+
+        <p class="login-description">
+          Chọn sân yêu thích. Hẹn giờ ra sân.
+          Mỗi ngày thêm một cuộc hẹn đáng mong chờ.
+        </p>
+
+      </div>
+
+      <figure class="login-sports-visual">
+        <img th:src="@{/images/generated/login-sports-evening-v1.png}" width="1536" height="1024" alt="Minh họa bạn bè chơi cầu lông và bóng đá trên sân xanh dưới ánh đèn chiều tối" decoding="async" fetchpriority="high">
+        <figcaption>Hẹn đồng đội · Chọn sân · Cùng ra sân</figcaption>
+      </figure>
+
+      <div class="login-showcase-footer">
+        <span class="login-live-dot" aria-hidden="true"></span>
+        Mỗi khung giờ là một cuộc hẹn với đam mê.
+      </div>
+    </section>
+
+    <!-- Đăng nhập -->
+    <section class="login-panel" aria-labelledby="login-title">
+      <a class="login-back" th:href="@{/}">← Khám phá sân trước</a>
+
+      <div class="login-panel-heading">
+
+        <p class="eyebrow text-green">CHÀO MỪNG BẠN TRỞ LẠI</p>
+        <h2 id="login-title">Đăng nhập</h2>
+        <p class="muted">Tiếp tục những cuộc hẹn trên sân của bạn.</p>
+      </div>
+
+      <div th:if="${param.session_expired != null}" class="alert alert-warning" role="alert">Phiên đã bị thu hồi hoặc quyền truy cập đã thay đổi. Vui lòng đăng nhập lại.</div>
+      <div th:if="${param.owner_registered != null}" class="alert alert-success" role="status">Đã tạo tài khoản chủ sân. Đăng nhập để vào trang quản lý và tự thêm sân.</div>
+      <div th:if="${param.error != null}"
+           class="alert alert-danger"
+           role="alert">
+        Không thể đăng nhập. Kiểm tra thông tin hoặc liên hệ quản trị viên nếu tài khoản bị khóa.
+      </div>
+
+      <div th:if="${param.registered != null}"
+           class="alert alert-success"
+           role="status">
+        Đăng ký thành công. Bạn có thể đăng nhập ngay.
+      </div>
+
+      <div th:if="${param.logout != null}"
+           class="alert alert-success"
+           role="status">
+        Bạn đã đăng xuất.
+      </div>
+
+      <div th:if="${param.google_error != null}" class="alert alert-danger" role="alert">
+        <span th:if="${param.google_error[0] == 'email_conflict'}">Email Google đã thuộc tài khoản có sẵn. Hãy đăng nhập bằng mật khẩu hiện tại; hệ thống không tự liên kết tài khoản.</span>
+        <span th:if="${param.google_error[0] != 'email_conflict'}">Không thể đăng nhập Google. Vui lòng thử lại hoặc dùng cách đăng nhập hiện tại.</span>
+      </div>
+      <form th:action="@{/login}" method="post" class="login-form">
+        <div class="mb-3">
+          <label for="username" class="form-label">Email hoặc số điện thoại</label>
+          <input id="username"
+                 name="username"
+                 type="text"
+                 class="form-control"
+                 placeholder="email@vidu.com hoặc 0912345678"
+                 maxlength="190"
+                 autocomplete="username"
+                 autocapitalize="none"
+                 spellcheck="false"
+                 required>
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label">Mật khẩu</label>
+          <div class="login-password-field">
+          <input id="password"
+                 name="password"
+                 type="password"
+                 class="form-control"
+                 placeholder="Nhập mật khẩu"
+                 autocomplete="current-password"
+                 required>
+          <button type="button" class="login-password-toggle" data-password-toggle aria-controls="password" aria-label="Hiện mật khẩu" aria-pressed="false" title="Hiện mật khẩu" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="login-eye-slash" d="m3 3 18 18"/></svg>
+          </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 login-submit" data-loading-text="Đang đăng nhập…">
+          Đăng nhập
+        </button>
+      </form>
+      <div class="login-social" th:if="${googleEnabled}">
+        <div class="login-divider"><span>hoặc tiếp tục với</span></div>
+        <a th:href="@{/oauth2/authorization/google}" class="login-google"
+           title="Đăng nhập bằng Google" aria-label="Đăng nhập bằng Google">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.9-1.75 2.98-4.33 2.98-7.36Z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.24-2.51c-.9.6-2.04.96-3.38.96-2.6 0-4.81-1.76-5.6-4.12H3.05v2.59A10 10 0 0 0 12 22Z"/>
+            <path fill="#FBBC05" d="M6.4 13.92A6 6 0 0 1 6.09 12c0-.67.11-1.32.31-1.92V7.49H3.05A10 10 0 0 0 2 12c0 1.61.38 3.14 1.05 4.51l3.35-2.59Z"/>
+            <path fill="#EA4335" d="M12 5.96c1.47 0 2.79.51 3.82 1.51l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.95 5.49l3.35 2.59A5.99 5.99 0 0 1 12 5.96Z"/>
+          </svg>
+        </a>
+      </div>
+      <p th:unless="${googleEnabled}" class="login-google-unavailable">Đăng nhập Google chưa được cấu hình trên máy chủ.</p>
+
+      <p class="login-forgot-note">
+        Quên mật khẩu? Gọi cho chủ sân nơi bạn đã đặt để được cấp mật khẩu tạm.
+      </p>
+
+      <div class="login-register">
+        <span>Chưa có tài khoản?</span>
+        <a th:href="@{/register/customer}">Đăng ký khách hàng</a>
+      </div>
+
+      <div class="login-register"><a th:href="@{/register/owner}">Dành cho chủ sân →</a></div>
+    </section>
+
+  </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>
