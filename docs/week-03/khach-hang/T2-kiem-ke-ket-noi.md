@@ -33,7 +33,7 @@ Chưa chạy lại kiểm thử trong lần kiểm kê ngày 09/11/2026. Không 
 
 ## Phạm vi commit đề xuất
 
-Chỉ bổ sung bản kiểm kê này cho công việc T2 hiện tại trên nhánh `KAN-25-hoan-thiện-kết-nối-luồng-tim-san-va-xac-nhận-dặt-san`, tạo từ `main` của repo `nhut5768/sports-court-booking`. Đã đối chiếu các kết nối trên mã nguồn `main`. Các tệp mã nguồn liệt kê ở trên là thành phần tích hợp cần tham chiếu, không phải toàn bộ mã mới để đưa lại vào commit.
+Chỉ bổ sung bản kiểm kê này cho công việc T2 hiện tại trên nhánh `week3/nhu-luong-khach-hang`, tạo từ `main` của repo `nhut5768/sports-court-booking`. Đã đối chiếu các kết nối trên mã nguồn `main`. Các tệp mã nguồn liệt kê ở trên là thành phần tích hợp cần tham chiếu, không phải toàn bộ mã mới để đưa lại vào commit.
 
 ## Cập nhật từ bản local
 
