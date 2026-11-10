@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments :: head('Tài khoản')}"></head>
+
+<body class="sn-app sn-account">
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container page-space account-page">
+
+  <div class="account-heading">
+    <p class="eyebrow text-green">KHÔNG GIAN CÁ NHÂN</p>
+    <h1>Tài khoản của tôi</h1>
+    <p class="muted">
+      Một nơi để quản lý hồ sơ, bảo mật và những cuộc hẹn trên sân.
+    </p>
+  </div>
+
+  <section th:replace="~{fragments :: workspaceArt(${account.role == 'ADMIN' ? 'admin' : account.role == 'OWNER' ? 'owner' : 'customer'}, 'Không gian của bạn', 'Quản lý hồ sơ, cập nhật thông tin và sẵn sàng cho những cuộc hẹn mới.')}"></section>
+<div th:replace="~{fragments :: flash}"></div>
+
+  <div class="row g-4">
+
+    <!-- Thẻ hồ sơ -->
+    <aside class="col-lg-4">
+      <section class="surface account-profile">
+        <div class="account-avatar" aria-hidden="true">
+          <svg viewBox="0 0 64 64"
+               width="52"
+               height="52"
+               fill="none">
+            <circle cx="32"
+                    cy="23"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="3"/>
+            <path d="M13 53c0-11 8-18 19-18s19 7 19 18"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <h2 class="account-profile-name"
+            th:text="${account.name}">
+          Họ tên
+        </h2>
+
+        <p class="account-profile-email"
+           th:text="${account.email}">
+        </p>
+
+        <span class="account-role-badge"
+              th:text="${account.role == 'OWNER'
+                ? 'Chủ sân'
+                : 'Khách hàng'}">
+        </span>
+
+        <div class="account-profile-links">
+          <a class="btn btn-primary w-100"
+             th:if="${account.role == 'OWNER'}"
+             th:href="@{/owner}">
+            Quản lý sân
+          </a>
+
+          <a class="btn w-100"
+             th:classappend="${account.role == 'OWNER'
+               ? 'btn-outline-success'
+               : 'btn-primary'}"
+             th:href="@{/bookings}">
+            Lịch của tôi
+          </a>
+
+          <a class="btn btn-outline-secondary w-100"
+             th:href="@{/}">
+            Khám phá sân
+          </a>
+
+          <a class="btn btn-outline-secondary w-100"
+             th:href="@{/account/password}">
+            Đổi mật khẩu
+          </a>
+        </div>
+      </section>
+    </aside>
+
+    <div class="col-lg-8">
+
+      <!-- Thông tin cá nhân -->
+      <section class="surface account-info-panel">
+        <p class="eyebrow text-green">HỒ SƠ CỦA BẠN</p>
+        <h2>Thông tin tài khoản</h2>
+
+        <dl class="account-info-list">
+          <div>
+            <dt>Họ và tên</dt>
+            <dd th:text="${account.name}"></dd>
+          </div>
+
+          <div>
+            <dt>Email đăng nhập</dt>
+            <dd th:text="${account.email}"></dd>
+          </div>
+
+          <div>
+            <dt>Số điện thoại</dt>
+            <dd th:text="${#strings.isEmpty(account.phone)
+              ? 'Chưa cập nhật'
+              : account.phone}">
+            </dd>
+          </div>
+
+          <div>
+            <dt>Vai trò</dt>
+            <dd th:text="${account.role == 'OWNER'
+              ? 'Chủ sân'
+              : 'Khách hàng'}">
+            </dd>
+          </div>
+        </dl>
+
+        <p class="account-readonly-note">
+          Đăng nhập bằng email hoặc số điện thoại.
+          Tài khoản không thể tự thay đổi vai trò.
+        </p>
+      </section>
+
+      <!-- Cập nhật số điện thoại -->
+      <section class="surface mt-4" id="phone">
+        <p class="eyebrow text-green">SỐ ĐIỆN THOẠI</p>
+        <h2 th:text="${account.phone == null ? 'Thêm số điện thoại' : 'Đổi số điện thoại'}"></h2>
+        <p class="account-readonly-note mb-3"
+           th:if="${account.phone == null}">
+          Bạn cần số điện thoại để đặt sân và để chủ sân liên hệ.
+        </p>
+
+        <form class="row g-3 align-items-end"
+              method="post"
+              th:action="@{/account/phone}">
+          <div class="col-md-8">
+            <label class="form-label" for="phoneInput">Số di động Việt Nam (10 số)</label>
+            <input id="phoneInput"
+                   name="phone"
+                   type="tel"
+                   inputmode="numeric"
+                   class="form-control"
+                   placeholder="Ví dụ: 0912345678"
+                   maxlength="16"
+                   autocomplete="tel"
+                   th:value="${account.phone}"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100" type="submit">Lưu số điện thoại</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Tài khoản nhận cọc của chủ sân -->
+      <section class="surface mt-4"
+               id="bank"
+               th:if="${account.role == 'OWNER'}">
+        <p class="eyebrow text-green">NHẬN CỌC 50%</p>
+        <h2>Tài khoản nhận cọc</h2>
+        <p class="muted">
+          Chọn một trong hai cách. Nếu có ảnh QR tải lên, khách sẽ thấy ảnh đó.
+        </p>
+
+        <h3 class="h6 mt-4">Cách 1 · Tải ảnh QR có sẵn (MoMo, ngân hàng…)</h3>
+        <p class="muted small">
+          Khách quét ảnh này và tự nhập số tiền cọc, nội dung
+          <code>SANNHA &lt;mã đơn&gt;</code> được hiển thị bên cạnh.
+        </p>
+
+        <div class="payment-qr-current" th:if="${account.hasPaymentQr()}">
+          <img th:src="@{/payment-qr/{id}/{name}(id=${account.id},name=${account.paymentQr})}"
+               width="160"
+               height="160"
+               alt="Ảnh QR nhận cọc hiện tại">
+          <form th:action="@{/account/payment-qr/delete}"
+                method="post"
+                onsubmit="return confirm('Xóa ảnh QR nhận cọc?');">
+            <button class="btn btn-outline-danger btn-sm" type="submit">Xóa ảnh QR</button>
+          </form>
+        </div>
+
+        <form class="row g-3 align-items-end"
+              method="post"
+              enctype="multipart/form-data"
+              th:action="@{/account/payment-qr}">
+          <div class="col-md-8">
+            <label class="form-label" for="qr"
+                   th:text="${account.hasPaymentQr() ? 'Thay ảnh QR' : 'Ảnh QR'}">Ảnh QR</label>
+            <input id="qr"
+                   name="qr"
+                   type="file"
+                   class="form-control"
+                   accept="image/jpeg,image/png,image/webp"
+                   aria-describedby="qr-help"
+                   required>
+            <small id="qr-help" class="register-field-help">JPEG, PNG hoặc WEBP · Tối đa <span th:text="${@environment.getProperty('spring.servlet.multipart.max-file-size')}">10MB</span>. Kiểm tra đúng tài khoản nhận tiền trước khi tải lên.</small>
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary w-100" type="submit">Tải ảnh QR lên</button>
+          </div>
+        </form>
+
+        <h3 class="h6 mt-4">Cách 2 · Tạo VietQR từ tài khoản ngân hàng</h3>
+        <p class="muted small">
+          Mã QR tự điền sẵn số tiền cọc và nội dung chuyển khoản.
+        </p>
+
+        <form class="row g-3"
+              method="post"
+              th:action="@{/account/bank}">
+          <div class="col-md-4">
+            <label class="form-label" for="bankCode">Ngân hàng</label>
+            <select id="bankCode" name="bankCode" class="form-select" required>
+              <option value="">Chọn ngân hàng</option>
+              <option th:each="bank : ${banks}"
+                      th:value="${bank.key}"
+                      th:text="${bank.value}"
+                      th:selected="${bank.key == account.bankCode}">
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="bankAccountNo">Số tài khoản</label>
+            <input id="bankAccountNo"
+                   name="bankAccountNo"
+                   class="form-control"
+                   inputmode="numeric"
+                   pattern="[0-9 ]{6,24}"
+                   maxlength="24"
+                   th:value="${account.bankAccountNo}"
+                   required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="bankAccountName">Tên chủ tài khoản</label>
+            <input id="bankAccountName"
+                   name="bankAccountName"
+                   class="form-control"
+                   maxlength="100"
+                   placeholder="NGUYEN VAN A"
+                   th:value="${account.bankAccountName}"
+                   required>
+          </div>
+
+          <div class="col-12" id="bank-qr-preview" hidden>
+            <h4 class="h6">Mã QR nhận chuyển khoản</h4>
+            <p id="bank-qr-status" class="muted small" role="status" aria-live="polite"></p>
+            <img id="bank-qr-image" width="270" style="max-width:100%;height:auto" alt="QR ngân hàng đang nhập" hidden>
+            <p class="muted small">Bấm lưu để áp dụng cho các đơn đặt sân. Kiểm tra người nhận trên ứng dụng ngân hàng trước khi chuyển tiền.</p>
+            <p class="deposit-warning" th:if="${account.hasPaymentQr()}">Ảnh QR tải lên đang được ưu tiên. Xóa ảnh QR ở trên để khách dùng QR tự tạo.</p>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit">
+              Lưu tài khoản nhận cọc
+            </button>
+          </div>
+        </form>
+
+        <p class="account-readonly-note"
+           th:if="${!account.canReceiveDeposit()}">
+          Bạn chưa có tài khoản nhận cọc.
+          Khách sẽ không thấy mã QR chuyển cọc cho đến khi bạn cập nhật.
+        </p>
+      </section>
+
+      <!-- Liên kết theo vai trò -->
+      <section class="surface mt-4">
+        <p class="eyebrow text-green">TRUY CẬP NHANH</p>
+        <h2>Bạn muốn làm gì tiếp theo?</h2>
+
+        <div class="account-shortcuts">
+
+          <a class="account-shortcut"
+             th:href="@{/}">
+            <span class="account-shortcut-icon" aria-hidden="true"><svg th:replace="~{fragments :: icon('arrow')}"></svg></span>
+            <div>
+              <strong>Tìm sân phù hợp</strong>
+              <p>
+                Khám phá sân, xem giá và kiểm tra lịch trống.
+              </p>
+            </div>
+          </a>
+
+          <a class="account-shortcut"
+             th:href="@{/bookings}">
+            <span class="account-shortcut-icon" aria-hidden="true"><svg th:replace="~{fragments :: icon('arrow')}"></svg></span>
+            <div>
+              <strong>Theo dõi lịch đặt</strong>
+              <p>
+                Xem đơn, ngày chơi và trạng thái đặt sân.
+              </p>
+            </div>
+          </a>
+
+          <a class="account-shortcut"
+             th:if="${account.role == 'OWNER'}"
+             th:href="@{/owner}">
+            <span class="account-shortcut-icon" aria-hidden="true"><svg th:replace="~{fragments :: icon('arrow')}"></svg></span>
+            <div>
+              <strong>Quản lý hoạt động sân</strong>
+              <p>
+                Cập nhật sân, lịch, đơn đặt và doanh thu.
+              </p>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+      <div class="account-security-note">
+        <strong>Bảo vệ tài khoản của bạn</strong>
+        <p>
+          Không chia sẻ mật khẩu. Khi sử dụng máy tính chung,
+          hãy đăng xuất sau khi hoàn tất.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+<script th:src="@{/vendor/bank-qr.js}" defer></script>
+</body>
+</html>
