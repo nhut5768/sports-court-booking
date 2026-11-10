@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -44,6 +45,11 @@ public class HomeController {
       @RequestParam(required = false) LocalDate date,
       Model model) {
 
+    q = q.strip();
+    sport = canonicalChoice(sport, AppConstants.SPORTS);
+    List<String> areas = Stream.concat(AppConstants.AREAS.stream(), courts.findActiveAreas().stream())
+        .distinct().sorted().toList();
+    area = canonicalChoice(area, areas);
     if (date != null) service.checkDate(date);
     BigDecimal minimum = money(minPrice);
     BigDecimal maximum = money(maxPrice);
@@ -74,6 +80,8 @@ public class HomeController {
     Map<Long,Long> availability = new LinkedHashMap<>();
     if (date != null) for (Court court : result) availability.put(court.getId(),service.slots(court,date).stream().filter(slot -> "FREE".equals(slot.state())).count());
     model.addAttribute("selectedDate", date);
+    model.addAttribute("today", service.today());
+    model.addAttribute("areas", areas);
     model.addAttribute("searchLastDate",service.today().plusDays(AppConstants.MAX_BOOKING_DAYS));
     model.addAttribute("availability",availability);
     model.addAttribute("hasSearch", !q.isBlank() || !sport.isBlank() || !area.isBlank() || minimum != null || maximum != null || date != null);
@@ -90,8 +98,8 @@ public class HomeController {
     model.addAttribute("q", q);
     model.addAttribute("sport", sport);
     model.addAttribute("area", area);
-    model.addAttribute("minPrice", minPrice);
-    model.addAttribute("maxPrice", maxPrice);
+    model.addAttribute("minPrice", minimum == null ? "" : minimum.toPlainString());
+    model.addAttribute("maxPrice", maximum == null ? "" : maximum.toPlainString());
 
     return "home";
   }
@@ -168,5 +176,11 @@ public class HomeController {
     } catch (NumberFormatException exception) {
       throw new IllegalArgumentException("Khoảng giá không hợp lệ.");
     }
+  }
+
+  private static String canonicalChoice(String raw, List<String> choices) {
+    String value = raw.strip();
+    return choices.stream().filter(choice -> choice.equalsIgnoreCase(value))
+        .findFirst().orElse(value);
   }
 }
