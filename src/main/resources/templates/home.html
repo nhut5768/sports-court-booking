@@ -27,7 +27,7 @@
     <button class="btn btn-primary" type="submit"><svg th:replace="~{fragments :: icon('search')}"></svg><span>Tìm sân</span></button>
   </form>
 </section>
-<p class="discovery-search-note">Chọn ngày để xem số khung giờ còn trống và mở đúng lịch của sân. Lịch được kiểm tra lại khi xác nhận đặt.</p>
+<p class="discovery-search-note">Chọn ngày để xem số khung giờ còn trống và mở đúng lịch của sân; sân hết giờ trống vẫn được hiển thị để bạn chọn ngày khác. Khoảng giá lọc theo mức giá thấp nhất của sân, giá cụ thể nằm ở từng khung giờ.</p>
 <div class="home-highlights" aria-label="Tiện ích đặt sân"><div><span class="home-highlight-icon"><svg th:replace="~{fragments :: icon('search')}"></svg></span><span><strong>Tìm đúng sân bạn thích</strong><small>Lọc theo môn, khu vực và mức giá</small></span></div><div><span class="home-highlight-icon"><svg th:replace="~{fragments :: icon('calendar')}"></svg></span><span><strong>Chủ động từng khung giờ</strong><small>Xem lịch trống trước khi đặt</small></span></div><div><span class="home-highlight-icon"><svg th:replace="~{fragments :: icon('wallet')}"></svg></span><span><strong>Đặt cọc bằng mã QR</strong><small>Chuyển cọc và chờ chủ sân xác nhận</small></span></div></div>
 <section class="discovery-sports" th:unless="${hasSearch}" aria-labelledby="sports-title">
  <div class="section-heading"><div><p class="eyebrow text-green">MỖI MÔN MỘT NIỀM VUI</p><h2 id="sports-title">Hôm nay, bạn muốn chơi gì?</h2></div><span class="muted">Chọn môn · Tìm đồng đội · Ra sân</span></div>

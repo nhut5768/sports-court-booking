@@ -23,6 +23,9 @@ public interface CourtRepository extends JpaRepository<Court, Long> {
 
   long countByActiveTrueAndSport(String sport);
 
+  @Query("select distinct c.area from Court c where c.active = true order by c.area")
+  List<String> findActiveAreas();
+
   @Query(
       """
       select c from Court c

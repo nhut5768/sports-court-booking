@@ -759,6 +759,101 @@ class CourtIntegrationTest {
   }
 
   @Test
+  void combinedSearchNormalizesFiltersAndReturnsOnlyMatchingActiveCourts() throws Exception {
+    newCourt(owner, "Sân giá cao", "250000");
+    Court otherArea = newCourt(owner, "Sân khu vực khác", "120000");
+    otherArea.setArea("Thủ Đức");courts.saveAndFlush(otherArea);
+    Court otherSport = newCourt(owner, "Sân môn khác", "120000");
+    otherSport.setSport("Tennis");courts.saveAndFlush(otherSport);
+    Court inactive = newCourt(owner, "Sân tạm đóng", "120000");
+    inactive.setActive(false);courts.saveAndFlush(inactive);
+    var result = mvc.perform(get("/").param("q", "  Sân  ")
+        .param("sport", "  cầu lông  ").param("area", "  bình thạnh  ")
+        .param("date", day.toString()).param("minPrice", " 120000 ").param("maxPrice", "120000"))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("q", "Sân"))
+        .andExpect(model().attribute("sport", "Cầu lông"))
+        .andExpect(model().attribute("area", "Bình Thạnh"))
+        .andExpect(model().attribute("selectedDate", day))
+        .andExpect(model().attribute("minPrice", "120000"))
+        .andExpect(model().attribute("maxPrice", "120000"))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("/courts/" + court.getId() + "?date=" + day)))
+        .andReturn();
+    @SuppressWarnings("unchecked")
+    var page = (org.springframework.data.domain.Page<Court>) result.getModelAndView().getModel().get("courts");
+    assertThat(page.getContent()).extracting(Court::getId).containsExactly(court.getId());
+  }
+
+  @Test
+  void searchAreasIncludeActualCourtAreasAndFiltersSurviveBothFormsAndPaging() throws Exception {
+    for (int i = 0; i < 9; i++) {
+      Court c = newCourt(owner, "Sân ngoại thành " + i, "150000");
+      c.setArea("Khu thể thao mới");courts.saveAndFlush(c);
+    }
+    var result = mvc.perform(get("/").param("sport", "Cầu lông").param("area", "Khu thể thao mới")
+        .param("date", day.toString()).param("minPrice", "100000").param("maxPrice", "200000"))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("areas", org.hamcrest.Matchers.hasItem("Khu thể thao mới")))
+        .andReturn();
+    String html = result.getResponse().getContentAsString();
+    var heroMatch = java.util.regex.Pattern.compile("(?s)<form class=\"hero-search\".*?</form>").matcher(html);
+    assertThat(heroMatch.find()).isTrue();
+    String hero = heroMatch.group();
+    assertThat(searchInputValue(hero, "minPrice")).isEqualTo("100000");
+    assertThat(searchInputValue(hero, "maxPrice")).isEqualTo("200000");
+    assertThat(hero).containsPattern("<option(?=[^>]*value=\"Khu thể thao mới\")(?=[^>]*selected=\"selected\")[^>]*>");
+    var refineMatch = java.util.regex.Pattern.compile("(?s)<form[^>]*class=\"discovery-filter-form\".*?</form>").matcher(html);
+    assertThat(refineMatch.find()).isTrue();
+    String refine = refineMatch.group();
+    assertThat(searchInputValue(refine, "sport")).isEqualTo("Cầu lông");
+    assertThat(searchInputValue(refine, "area")).isEqualTo("Khu thể thao mới");
+    assertThat(searchInputValue(refine, "date")).isEqualTo(day.toString());
+    assertThat(hero).doesNotContain("name=\"page\"");
+    assertThat(refine).doesNotContain("name=\"page\"");
+    var nextMatch = java.util.regex.Pattern.compile("(?s)<nav class=\"pager[^>]*>.*?<a[^>]*href=\"([^\"]+)\"").matcher(html);
+    assertThat(nextMatch.find()).isTrue();
+    String next = org.springframework.web.util.HtmlUtils.htmlUnescape(nextMatch.group(1));
+    var nextResult = mvc.perform(get(java.net.URI.create(next.substring(0, next.indexOf('#')))))
+        .andExpect(status().isOk()).andExpect(model().attribute("area", "Khu thể thao mới"))
+        .andExpect(model().attribute("sport", "Cầu lông"))
+        .andExpect(model().attribute("selectedDate", day))
+        .andExpect(model().attribute("minPrice", "100000"))
+        .andExpect(model().attribute("maxPrice", "200000")).andReturn();
+    var nextPage = (org.springframework.data.domain.Page<?>) nextResult.getModelAndView().getModel().get("courts");
+    assertThat(nextPage.getNumber()).isEqualTo(1);
+    assertThat(nextPage.getContent()).hasSize(1);
+  }
+
+  private static String searchInputValue(String form, String name) {
+    var input = java.util.regex.Pattern.compile("<input(?=[^>]*name=\"" + name + "\")[^>]*>").matcher(form);
+    assertThat(input.find()).isTrue();
+    var value = java.util.regex.Pattern.compile("value=\"([^\"]*)\"").matcher(input.group());
+    assertThat(value.find()).isTrue();
+    return org.springframework.web.util.HtmlUtils.htmlUnescape(value.group(1));
+  }
+
+  @Test
+  void searchHandlesBlankFiltersNoMatchesAndInvalidRanges() throws Exception {
+    mvc.perform(get("/").param("sport", "  ").param("area", "  ").param("minPrice", " "))
+        .andExpect(status().isOk()).andExpect(model().attribute("hasSearch", false));
+    mvc.perform(get("/").param("sport", "Không có môn này"))
+        .andExpect(status().isOk())
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("Chưa tìm thấy sân phù hợp")));
+    for (String price : List.of("-1", "abc")) {
+      mvc.perform(get("/").param("minPrice", price)).andExpect(status().isBadRequest());
+      mvc.perform(get("/").param("maxPrice", price)).andExpect(status().isBadRequest());
+    }
+    mvc.perform(get("/").param("minPrice", "200000").param("maxPrice", "100000"))
+        .andExpect(status().isBadRequest());
+    for (LocalDate invalid : List.of(service.today().minusDays(1), service.today().plusDays(31))) {
+      mvc.perform(get("/").param("date", invalid.toString())).andExpect(status().isBadRequest());
+    }
+    mvc.perform(get("/").param("date", "invalid")).andExpect(status().isBadRequest());
+    mvc.perform(get("/").param("date", service.today().plusDays(30).toString()))
+        .andExpect(status().isOk());
+  }
+
+  @Test
   void authenticatedPagesRender() throws Exception {
     Booking b = service.book(court.getId(), day, 18, guest);
     mvc.perform(get("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")))
