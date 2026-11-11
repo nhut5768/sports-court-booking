@@ -887,6 +887,93 @@ class CourtIntegrationTest {
   }
 
   @Test
+  void searchClampsPageAndReportsActualResultRangeAndEmptyState() throws Exception {
+    for (int i = 0; i < 8; i++) newCourt(owner, "Sân phân trang " + i, "120000");
+    var last = mvc.perform(get("/").param("page", "999"))
+        .andExpect(status().isOk()).andExpect(model().attribute("resultFrom", 9L))
+        .andExpect(model().attribute("resultTo", 9L))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("Hiển thị 9–9 trong 9 sân phù hợp")))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("Chọn ngày để xem lịch trống")))
+        .andReturn();
+    var page = (org.springframework.data.domain.Page<?>) last.getModelAndView().getModel().get("courts");
+    assertThat(page.getNumber()).isEqualTo(1);
+    mvc.perform(get("/").param("page", "-1"))
+        .andExpect(status().isOk()).andExpect(model().attribute("resultFrom", 1L))
+        .andExpect(model().attribute("resultTo", 8L));
+    mvc.perform(get("/").param("q", "Không tồn tại"))
+        .andExpect(status().isOk()).andExpect(model().attribute("resultFrom", 0L))
+        .andExpect(model().attribute("resultTo", 0L))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("Chưa tìm thấy sân phù hợp")));
+  }
+
+  @Test
+  void originalSearchSurvivesDetailDateChangeConfirmationAndReturn() throws Exception {
+    for (int i = 0; i < 8; i++) newCourt(owner, "Sân ngữ cảnh " + i, "120000");
+    var search = mvc.perform(get("/").param("q", "Sân").param("sport", "Cầu lông")
+        .param("area", "Bình Thạnh").param("date", day.toString())
+        .param("minPrice", "100000").param("maxPrice", "200000").param("page", "1"))
+        .andExpect(status().isOk()).andReturn();
+    String returnTo = (String) search.getModelAndView().getModel().get("searchReturnTo");
+    String detailUrl = renderedHref(search.getResponse().getContentAsString(),
+        "class=\"card-art\" href=\"([^\"]+)\"");
+    var detail = mvc.perform(get(java.net.URI.create(detailUrl)).with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk()).andExpect(model().attribute("searchReturnTo", returnTo)).andReturn();
+    assertThat(searchInputValue(detail.getResponse().getContentAsString(), "returnTo")).isEqualTo(returnTo);
+    var selected = (Court) detail.getModelAndView().getModel().get("court");
+    var changed = mvc.perform(get("/courts/" + selected.getId()).param("date", day.plusDays(1).toString())
+        .param("returnTo", returnTo).with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk()).andReturn();
+    String confirmUrl = renderedHref(changed.getResponse().getContentAsString(),
+        "href=\"([^\"]*/bookings/confirm[^\"]*hour=18[^\"]*)\"");
+    var confirm = mvc.perform(get(java.net.URI.create(confirmUrl)).with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk()).andExpect(model().attribute("date", day.plusDays(1)))
+        .andExpect(model().attribute("searchReturnTo", returnTo)).andReturn();
+    assertThat(searchInputValue(confirm.getResponse().getContentAsString(), "returnTo")).isEqualTo(returnTo);
+    String back = renderedHref(detail.getResponse().getContentAsString(), "href=\"([^\"]+)\" class=\"back-link\"");
+    var restored = mvc.perform(get(java.net.URI.create(back.substring(0, back.indexOf('#')))))
+        .andExpect(status().isOk()).andExpect(model().attribute("q", "Sân"))
+        .andExpect(model().attribute("sport", "Cầu lông"))
+        .andExpect(model().attribute("area", "Bình Thạnh"))
+        .andExpect(model().attribute("selectedDate", day))
+        .andExpect(model().attribute("minPrice", "100000"))
+        .andExpect(model().attribute("maxPrice", "200000")).andReturn();
+    assertThat(((org.springframework.data.domain.Page<?>) restored.getModelAndView().getModel().get("courts")).getNumber()).isEqualTo(1);
+  }
+
+  @Test
+  void returnLinksRejectExternalAndUnrelatedDestinations() throws Exception {
+    for (String invalid : List.of("https://example.com", "//example.com", "/owner", "/?q=x\r\n")) {
+      mvc.perform(get("/courts/" + court.getId()).param("returnTo", invalid))
+          .andExpect(status().isOk()).andExpect(model().attribute("searchReturnTo", "/"));
+      mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+          .param("date", day.toString()).param("hour", "18").param("returnTo", invalid)
+          .with(user(guest.getEmail()).roles("CUSTOMER")))
+          .andExpect(status().isOk()).andExpect(model().attribute("searchReturnTo", "/"));
+    }
+  }
+
+  @Test
+  void stalePriceReturnsToDetailWithOriginalSearchContext() throws Exception {
+    String context = CustomerNavigation.searchUrl("Sân", "Cầu lông", "Bình Thạnh", day, "100000", "200000", 0);
+    var rejected = mvc.perform(post("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")).with(csrf())
+        .param("courtId", court.getId().toString()).param("date", day.toString())
+        .param("hour", "18").param("expectedPrice", "1").param("returnTo", context))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attributeExists("error"))
+        .andReturn();
+    assertThat(bookings.count()).isZero();
+    mvc.perform(get(java.net.URI.create(rejected.getResponse().getRedirectedUrl())))
+        .andExpect(status().isOk()).andExpect(model().attribute("date", day))
+        .andExpect(model().attribute("searchReturnTo", context));
+  }
+
+  private static String renderedHref(String html, String expression) {
+    var link = java.util.regex.Pattern.compile(expression).matcher(html);
+    assertThat(link.find()).isTrue();
+    return org.springframework.web.util.HtmlUtils.htmlUnescape(link.group(1));
+  }
+
+  @Test
   void customerCanFollowDetailConfirmAndCreateBookingWithQuotedPeakPrice() throws Exception {
     PriceRule peak = new PriceRule();
     peak.setCourt(court);peak.setStartHour(17);peak.setEndHour(22);

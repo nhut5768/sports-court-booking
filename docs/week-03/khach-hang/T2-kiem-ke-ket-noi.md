@@ -37,6 +37,8 @@ Chỉ bổ sung bản kiểm kê này cho công việc T2 hiện tại trên nh�
 
 ## Cập nhật từ bản local
 
+Ghi chú cuối tuần: phần giữ bộ lọc/trang khi quay lại đã được bổ sung trong [T5](T5-ket-qua-gia-phan-trang.md); tình trạng thiếu kết nối ở bản kiểm kê T2 phía trên là ghi nhận tại thời điểm kiểm kê.
+
 - Đồng bộ `home.html`: ảnh sân thực tế làm ảnh đầu trang khi có ảnh, ô môn thể thao dùng datalist, hướng dẫn và trạng thái danh mục sân.
 - Đồng bộ `detail.html`: bổ sung class giao diện trang chi tiết.
 - Đồng bộ kiểm thử giao diện ô chọn môn trong `CourtIntegrationTest` với datalist.

@@ -36,6 +36,7 @@ public class BookingController {
       @RequestParam Long courtId,
       @RequestParam LocalDate date,
       @RequestParam int hour,
+      @RequestParam(defaultValue = "/") String returnTo,
       Principal p,
       Model m) {
     Court c = service.loadDetails(courtId);
@@ -46,6 +47,7 @@ public class BookingController {
     service.assertBookable(c, date, hour);
     BigDecimal price = service.priceFor(c, hour);
     m.addAttribute("court", c);
+    m.addAttribute("searchReturnTo", CustomerNavigation.safeSearchUrl(returnTo));
     m.addAttribute("date", date);
     m.addAttribute("hour", hour);
     m.addAttribute("price", price);
@@ -61,6 +63,7 @@ public class BookingController {
       @RequestParam LocalDate date,
       @RequestParam int hour,
       @RequestParam(required = false) BigDecimal expectedPrice,
+      @RequestParam(defaultValue = "/") String returnTo,
       Principal p,
       RedirectAttributes r) {
     try {
@@ -77,7 +80,7 @@ public class BookingController {
           e instanceof IllegalArgumentException
               ? e.getMessage()
               : "Khung giờ đã có người đặt. Vui lòng chọn lại.");
-      return "redirect:/courts/" + courtId + "?date=" + date;
+      return "redirect:" + CustomerNavigation.detailUrl(courtId, date, returnTo);
     }
   }
 

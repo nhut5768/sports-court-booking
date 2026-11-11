@@ -75,6 +75,11 @@ public class HomeController {
             maximum,
             PageRequest.of(Math.max(page, 0), 8));
 
+    if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
+      result = courts.search(q, sport, area, minimum, maximum,
+          PageRequest.of(result.getTotalPages() - 1, 8));
+    }
+
     Map<String, Long> counts = sportCounts();
 
     Map<Long,Long> availability = new LinkedHashMap<>();
@@ -86,6 +91,8 @@ public class HomeController {
     model.addAttribute("availability",availability);
     model.addAttribute("hasSearch", !q.isBlank() || !sport.isBlank() || !area.isBlank() || minimum != null || maximum != null || date != null);
     model.addAttribute("courts", result);
+    model.addAttribute("resultFrom", result.isEmpty() ? 0L : result.getPageable().getOffset() + 1);
+    model.addAttribute("resultTo", result.isEmpty() ? 0L : result.getPageable().getOffset() + result.getNumberOfElements());
     model.addAttribute("covers", covers(result.getContent()));
     model.addAttribute(
         "ratings",
@@ -100,6 +107,9 @@ public class HomeController {
     model.addAttribute("area", area);
     model.addAttribute("minPrice", minimum == null ? "" : minimum.toPlainString());
     model.addAttribute("maxPrice", maximum == null ? "" : maximum.toPlainString());
+    model.addAttribute("searchReturnTo", CustomerNavigation.searchUrl(q, sport, area, date,
+        minimum == null ? "" : minimum.toPlainString(), maximum == null ? "" : maximum.toPlainString(),
+        result.getNumber()));
 
     return "home";
   }
@@ -109,6 +119,7 @@ public class HomeController {
       @PathVariable Long id,
       @RequestParam(required = false) LocalDate date,
       @RequestParam(defaultValue = "0") int reviewPage,
+      @RequestParam(defaultValue = "/") String returnTo,
       Model model,
       Principal principal) {
 
@@ -116,6 +127,7 @@ public class HomeController {
     LocalDate selectedDate = date == null ? service.today() : date;
 
     model.addAttribute("court", court);
+    model.addAttribute("searchReturnTo", CustomerNavigation.safeSearchUrl(returnTo));
     model.addAttribute("date", selectedDate);
     model.addAttribute("slots", service.slots(court, selectedDate));
     model.addAttribute(

@@ -10,6 +10,7 @@ Ngày thực hiện: 10/11/2026. Nhánh: `week3/nhu-luong-khach-hang`.
 - Cấp ngày hôm nay cho giới hạn dưới của ô ngày ngay trong controller trang chủ.
 - Giữ giá đã chuẩn hóa trong hai form và liên kết phân trang; form đổi bộ lọc không gửi trang cũ, nên quay về trang đầu.
 - Giữ liên kết chi tiết theo ngày đã chọn. Chưa bổ sung luồng quay lại giữ toàn bộ bộ lọc; phần này nằm ngoài thay đổi T3 hiện tại.
+- Cập nhật cuối tuần: luồng quay lại giữ bộ lọc được hoàn thiện ở [T5](T5-ket-qua-gia-phan-trang.md); ghi nhận trên mô tả phạm vi commit T3.
 
 ## Quy tắc tìm kiếm
 
