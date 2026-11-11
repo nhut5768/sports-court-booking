@@ -160,10 +160,15 @@ public class BookingService {
 
   @Transactional(isolation = Isolation.READ_COMMITTED)
   public Booking book(Long courtId, LocalDate date, int hour, Account customer) {
+    return book(courtId, date, hour, customer, null);
+  }
+
+  @Transactional(isolation = Isolation.READ_COMMITTED)
+  public Booking book(Long courtId, LocalDate date, int hour, Account customer, BigDecimal expectedPrice) {
     if (!"CUSTOMER".equals(customer.getRole())) {
       throw new AccessDeniedException("Chỉ khách hàng được đặt sân trên tài khoản này.");
     }
-    if (customer.getPhone() == null) {
+    if (customer.getPhone() == null || customer.getPhone().isBlank()) {
       throw new IllegalArgumentException(
           "Vui lòng cập nhật số điện thoại trong trang Tài khoản trước khi đặt sân.");
     }
@@ -174,12 +179,16 @@ public class BookingService {
         .filter(this::holdExpired)
         .ifPresent(this::expireHold);
     assertBookable(c, date, hour);
+    BigDecimal currentPrice = priceFor(c, hour);
+    if (expectedPrice != null && expectedPrice.compareTo(currentPrice) != 0) {
+      throw new IllegalArgumentException("Giá khung giờ đã thay đổi. Vui lòng chọn lại giờ và kiểm tra giá mới trước khi đặt.");
+    }
     Booking b = new Booking();
     b.setCourt(c);
     b.setCustomer(customer);
     b.setPlayDate(date);
     b.setStartHour(hour);
-    b.setAmount(priceFor(c, hour));
+    b.setAmount(currentPrice);
     b.setDepositAmount(depositFor(b.getAmount()));
     b.setStatus("PENDING_DEPOSIT");
     b.setActiveSlotKey(key(courtId, date, hour));
