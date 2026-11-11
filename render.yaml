@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: san-nha
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod,mysql,hosting,render
+      - key: JAVA_TOOL_OPTIONS
+        value: "-Xms64m -Xmx256m -Xss512k -XX:MaxDirectMemorySize=32m -XX:+ExitOnOutOfMemoryError"
+      - key: RUN_DB_MIGRATIONS
+        value: "false"
+      - key: DEBUG
+        value: "false"
+      - key: TRACE
+        value: "false"
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
