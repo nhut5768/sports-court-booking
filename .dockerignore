@@ -1,0 +1,8 @@
+**
+!pom.xml
+!src/
+!src/**
+!Dockerfile
+src/test/
+!scripts/
+!scripts/start-container.sh

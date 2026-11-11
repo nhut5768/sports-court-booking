@@ -1,7 +1,9 @@
-/target/
+target/
 *.log
 .env
 .env.*
 !.env.example
+!deploy/.env.example
+uploads/
 /docs/week-03/khach-hang/BAO-CAO-T5-12-11-2026.md
 /docs/week-03/khach-hang/BAO-CAO-T6-13-11-2026.md
