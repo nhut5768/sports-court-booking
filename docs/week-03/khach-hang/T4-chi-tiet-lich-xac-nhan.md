@@ -13,6 +13,8 @@ Ngày thực hiện: 11/11/2026. Nhánh: `week3/nhu-luong-khach-hang`.
 
 ## Phạm vi thay đổi
 
+Ghi chú cuối tuần: [T5](T5-ket-qua-gia-phan-trang.md) bổ sung `returnTo` vào form và liên kết xác nhận để phục hồi bộ lọc/trang ban đầu; quy tắc giá và trạng thái đơn T4 được giữ nguyên.
+
 | Tệp | Thay đổi |
 | --- | --- |
 | `BookingController.java` | Kiểm tra vai trò ở trang xác nhận; lấy giá một lần; cung cấp trạng thái thiếu điện thoại; chuyển giá đã xem vào service khi POST |
