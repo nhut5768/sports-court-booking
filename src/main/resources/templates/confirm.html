@@ -7,7 +7,7 @@
 
 <main id="main-content" tabindex="-1" class="container page-space confirm-page">
 <a class="cf-back"
-     th:href="@{/courts/{id}(id=${court.id},date=${date})}">
+     th:href="@{/courts/{id}(id=${court.id},date=${date},returnTo=${searchReturnTo})}">
     ← Chọn lại khung giờ
   </a>
 
@@ -140,6 +140,13 @@
           <input type="hidden" name="courtId" th:value="${court.id}">
           <input type="hidden" name="date" th:value="${date}">
           <input type="hidden" name="hour" th:value="${hour}">
+          <input type="hidden" name="returnTo" th:value="${searchReturnTo}">
+          <input type="hidden" name="expectedPrice" th:value="${price}">
+
+          <p th:if="${missingPhone}" role="alert">
+            Bạn cần <a th:href="@{/account}">cập nhật số điện thoại</a> trước khi đặt sân.
+            Sau đó quay lại sân và chọn khung giờ.
+          </p>
 
           <div class="cf-agreement">
             <input id="confirm-agreement"
@@ -152,13 +159,14 @@
           </div>
 
           <button type="submit"
+                  th:disabled="${missingPhone}"
                   class="btn btn-primary w-100 cf-submit">
             Giữ khung giờ và đặt cọc
           </button>
         </form>
 
         <a class="cf-change"
-           th:href="@{/courts/{id}(id=${court.id},date=${date})}">
+           th:href="@{/courts/{id}(id=${court.id},date=${date},returnTo=${searchReturnTo})}">
           Chọn lại khung giờ
         </a>
 

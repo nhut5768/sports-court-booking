@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -44,6 +45,11 @@ public class HomeController {
       @RequestParam(required = false) LocalDate date,
       Model model) {
 
+    q = q.strip();
+    sport = canonicalChoice(sport, AppConstants.SPORTS);
+    List<String> areas = Stream.concat(AppConstants.AREAS.stream(), courts.findActiveAreas().stream())
+        .distinct().sorted().toList();
+    area = canonicalChoice(area, areas);
     if (date != null) service.checkDate(date);
     BigDecimal minimum = money(minPrice);
     BigDecimal maximum = money(maxPrice);
@@ -69,15 +75,24 @@ public class HomeController {
             maximum,
             PageRequest.of(Math.max(page, 0), 8));
 
+    if (result.getTotalPages() > 0 && result.getNumber() >= result.getTotalPages()) {
+      result = courts.search(q, sport, area, minimum, maximum,
+          PageRequest.of(result.getTotalPages() - 1, 8));
+    }
+
     Map<String, Long> counts = sportCounts();
 
     Map<Long,Long> availability = new LinkedHashMap<>();
     if (date != null) for (Court court : result) availability.put(court.getId(),service.slots(court,date).stream().filter(slot -> "FREE".equals(slot.state())).count());
     model.addAttribute("selectedDate", date);
+    model.addAttribute("today", service.today());
+    model.addAttribute("areas", areas);
     model.addAttribute("searchLastDate",service.today().plusDays(AppConstants.MAX_BOOKING_DAYS));
     model.addAttribute("availability",availability);
     model.addAttribute("hasSearch", !q.isBlank() || !sport.isBlank() || !area.isBlank() || minimum != null || maximum != null || date != null);
     model.addAttribute("courts", result);
+    model.addAttribute("resultFrom", result.isEmpty() ? 0L : result.getPageable().getOffset() + 1);
+    model.addAttribute("resultTo", result.isEmpty() ? 0L : result.getPageable().getOffset() + result.getNumberOfElements());
     model.addAttribute("covers", covers(result.getContent()));
     model.addAttribute(
         "ratings",
@@ -90,8 +105,11 @@ public class HomeController {
     model.addAttribute("q", q);
     model.addAttribute("sport", sport);
     model.addAttribute("area", area);
-    model.addAttribute("minPrice", minPrice);
-    model.addAttribute("maxPrice", maxPrice);
+    model.addAttribute("minPrice", minimum == null ? "" : minimum.toPlainString());
+    model.addAttribute("maxPrice", maximum == null ? "" : maximum.toPlainString());
+    model.addAttribute("searchReturnTo", CustomerNavigation.searchUrl(q, sport, area, date,
+        minimum == null ? "" : minimum.toPlainString(), maximum == null ? "" : maximum.toPlainString(),
+        result.getNumber()));
 
     return "home";
   }
@@ -101,6 +119,7 @@ public class HomeController {
       @PathVariable Long id,
       @RequestParam(required = false) LocalDate date,
       @RequestParam(defaultValue = "0") int reviewPage,
+      @RequestParam(defaultValue = "/") String returnTo,
       Model model,
       Principal principal) {
 
@@ -108,6 +127,7 @@ public class HomeController {
     LocalDate selectedDate = date == null ? service.today() : date;
 
     model.addAttribute("court", court);
+    model.addAttribute("searchReturnTo", CustomerNavigation.safeSearchUrl(returnTo));
     model.addAttribute("date", selectedDate);
     model.addAttribute("slots", service.slots(court, selectedDate));
     model.addAttribute(
@@ -168,5 +188,11 @@ public class HomeController {
     } catch (NumberFormatException exception) {
       throw new IllegalArgumentException("Khoảng giá không hợp lệ.");
     }
+  }
+
+  private static String canonicalChoice(String raw, List<String> choices) {
+    String value = raw.strip();
+    return choices.stream().filter(choice -> choice.equalsIgnoreCase(value))
+        .findFirst().orElse(value);
   }
 }

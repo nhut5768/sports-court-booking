@@ -10,7 +10,7 @@
 
 <main id="main-content" tabindex="-1" class="container page-space court-detail-page">
 
-  <a th:href="@{/}" class="back-link">
+  <a th:href="${searchReturnTo}" class="back-link">
     ← Quay lại danh sách sân
   </a>
 
@@ -172,6 +172,7 @@
         <form method="get"
               th:action="@{/courts/{id}(id=${court.id})}"
               class="court-date-filter">
+          <input type="hidden" name="returnTo" th:value="${searchReturnTo}">
 
           <div class="court-date-field">
             <label for="date" class="form-label">Ngày bạn muốn chơi</label>
@@ -245,7 +246,7 @@
                th:href="@{/bookings/confirm(
                  courtId=${court.id},
                  date=${date},
-                 hour=${slot.hour})}">
+                 hour=${slot.hour},returnTo=${searchReturnTo})}">
               Chọn giờ này
             </a>
 
@@ -397,13 +398,13 @@
              aria-label="Phân trang đánh giá">
           <a class="btn btn-outline-secondary btn-sm"
              th:if="${reviews.hasPrevious()}"
-             th:href="@{/courts/{id}(id=${court.id},date=${date},reviewPage=${reviews.number - 1})} + '#reviews'">
+             th:href="@{/courts/{id}(id=${court.id},date=${date},returnTo=${searchReturnTo},reviewPage=${reviews.number - 1})} + '#reviews'">
             ← Mới hơn
           </a>
           <span class="muted" th:text="|Trang ${reviews.number + 1}/${reviews.totalPages}|"></span>
           <a class="btn btn-outline-secondary btn-sm"
              th:if="${reviews.hasNext()}"
-             th:href="@{/courts/{id}(id=${court.id},date=${date},reviewPage=${reviews.number + 1})} + '#reviews'">
+             th:href="@{/courts/{id}(id=${court.id},date=${date},returnTo=${searchReturnTo},reviewPage=${reviews.number + 1})} + '#reviews'">
             Cũ hơn →
           </a>
         </nav>
