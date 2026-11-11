@@ -140,6 +140,12 @@
           <input type="hidden" name="courtId" th:value="${court.id}">
           <input type="hidden" name="date" th:value="${date}">
           <input type="hidden" name="hour" th:value="${hour}">
+          <input type="hidden" name="expectedPrice" th:value="${price}">
+
+          <p th:if="${missingPhone}" role="alert">
+            Bạn cần <a th:href="@{/account}">cập nhật số điện thoại</a> trước khi đặt sân.
+            Sau đó quay lại sân và chọn khung giờ.
+          </p>
 
           <div class="cf-agreement">
             <input id="confirm-agreement"
@@ -152,6 +158,7 @@
           </div>
 
           <button type="submit"
+                  th:disabled="${missingPhone}"
                   class="btn btn-primary w-100 cf-submit">
             Giữ khung giờ và đặt cọc
           </button>

@@ -1,8 +1,10 @@
 package vn.uth.court;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDate;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,12 +39,18 @@ public class BookingController {
       Principal p,
       Model m) {
     Court c = service.loadDetails(courtId);
+    Account customer = accounts.current(p.getName());
+    if (!"CUSTOMER".equals(customer.getRole())) {
+      throw new AccessDeniedException("Chỉ khách hàng được đặt sân.");
+    }
     service.assertBookable(c, date, hour);
+    BigDecimal price = service.priceFor(c, hour);
     m.addAttribute("court", c);
     m.addAttribute("date", date);
     m.addAttribute("hour", hour);
-    m.addAttribute("price", service.priceFor(c, hour));
-    m.addAttribute("deposit", BookingService.depositFor(service.priceFor(c, hour)));
+    m.addAttribute("price", price);
+    m.addAttribute("deposit", BookingService.depositFor(price));
+    m.addAttribute("missingPhone", customer.getPhone() == null || customer.getPhone().isBlank());
     m.addAttribute("label", String.format("%02d:00 – %02d:00", hour, hour + 1));
     return "confirm";
   }
@@ -52,10 +60,11 @@ public class BookingController {
       @RequestParam Long courtId,
       @RequestParam LocalDate date,
       @RequestParam int hour,
+      @RequestParam(required = false) BigDecimal expectedPrice,
       Principal p,
       RedirectAttributes r) {
     try {
-      Booking b = service.book(courtId, date, hour, accounts.current(p.getName()));
+      Booking b = service.book(courtId, date, hour, accounts.current(p.getName()), expectedPrice);
       r.addFlashAttribute(
           "success",
           "Đã giữ khung giờ cho đơn #"

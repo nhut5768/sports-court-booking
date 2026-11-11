@@ -887,6 +887,108 @@ class CourtIntegrationTest {
   }
 
   @Test
+  void customerCanFollowDetailConfirmAndCreateBookingWithQuotedPeakPrice() throws Exception {
+    PriceRule peak = new PriceRule();
+    peak.setCourt(court);peak.setStartHour(17);peak.setEndHour(22);
+    peak.setPrice(new BigDecimal("180000"));prices.saveAndFlush(peak);
+    var detail = mvc.perform(get("/courts/" + court.getId()).param("date", day.toString())
+        .with(user(guest.getEmail()).roles("CUSTOMER"))).andExpect(status().isOk()).andReturn();
+    var link = java.util.regex.Pattern.compile("href=\"([^\"]*/bookings/confirm[^\"]*hour=18[^\"]*)\"")
+        .matcher(detail.getResponse().getContentAsString());
+    assertThat(link.find()).isTrue();
+    String url = org.springframework.web.util.HtmlUtils.htmlUnescape(link.group(1));
+    var confirmation = mvc.perform(get(java.net.URI.create(url)).with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk()).andExpect(model().attribute("date", day))
+        .andExpect(model().attribute("hour", 18))
+        .andExpect(model().attribute("price", org.hamcrest.Matchers.comparesEqualTo(new BigDecimal("180000"))))
+        .andExpect(model().attribute("deposit", org.hamcrest.Matchers.comparesEqualTo(new BigDecimal("90000"))))
+        .andReturn();
+    String form = confirmation.getResponse().getContentAsString();
+    mvc.perform(post("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")).with(csrf())
+        .param("courtId", searchInputValue(form, "courtId"))
+        .param("date", searchInputValue(form, "date"))
+        .param("hour", searchInputValue(form, "hour"))
+        .param("expectedPrice", searchInputValue(form, "expectedPrice")))
+        .andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("/bookings/*"));
+    Booking booking = bookings.findAll().get(0);
+    assertThat(booking.getPlayDate()).isEqualTo(day);
+    assertThat(booking.getStartHour()).isEqualTo(18);
+    assertThat(booking.getAmount()).isEqualByComparingTo("180000");
+    assertThat(booking.getDepositAmount()).isEqualByComparingTo("90000");
+    assertThat(booking.getStatus()).isEqualTo("PENDING_DEPOSIT");
+    mvc.perform(get("/bookings/" + booking.getId()).with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk());
+    assertThat(service.slots(court, day)).filteredOn(slot -> slot.hour() == 18)
+        .extracting(BookingService.Slot::state).containsExactly("BOOKED");
+  }
+
+  @Test
+  void bookingRejectsPriceChangedAfterConfirmationWithoutCreatingAnOrder() throws Exception {
+    mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+        .param("date", day.toString()).param("hour", "18")
+        .with(user(guest.getEmail()).roles("CUSTOMER"))).andExpect(status().isOk());
+    court.setPrice(new BigDecimal("200000"));court.setMinPrice(new BigDecimal("200000"));
+    courts.saveAndFlush(court);
+    mvc.perform(post("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")).with(csrf())
+        .param("courtId", court.getId().toString()).param("date", day.toString())
+        .param("hour", "18").param("expectedPrice", "120000"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl("/courts/" + court.getId() + "?date=" + day))
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attributeExists("error"));
+    assertThat(bookings.count()).isZero();
+    mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+        .param("date", day.toString()).param("hour", "18")
+        .with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("price", org.hamcrest.Matchers.comparesEqualTo(new BigDecimal("200000"))));
+  }
+
+  @Test
+  void staleConfirmationCannotBookNewlyBlockedOrTakenSlot() throws Exception {
+    mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+        .param("date", day.toString()).param("hour", "18")
+        .with(user(guest.getEmail()).roles("CUSTOMER"))).andExpect(status().isOk());
+    service.toggleBlock(court.getId(), day, 18, owner);
+    mvc.perform(post("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")).with(csrf())
+        .param("courtId", court.getId().toString()).param("date", day.toString())
+        .param("hour", "18").param("expectedPrice", "120000"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attributeExists("error"));
+    assertThat(bookings.count()).isZero();
+    service.toggleBlock(court.getId(), day, 18, owner);
+    service.book(court.getId(), day, 18, other);
+    mvc.perform(post("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")).with(csrf())
+        .param("courtId", court.getId().toString()).param("date", day.toString())
+        .param("hour", "18").param("expectedPrice", "120000"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attributeExists("error"));
+    assertThat(bookings.count()).isEqualTo(1);
+  }
+
+  @Test
+  void confirmationRequiresCustomerAndExplainsMissingPhoneBeforeSubmit() throws Exception {
+    mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+        .param("date", day.toString()).param("hour", "18").accept(org.springframework.http.MediaType.TEXT_HTML))
+        .andExpect(status().is3xxRedirection()).andExpect(redirectedUrlPattern("**/login"));
+    mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+        .param("date", day.toString()).param("hour", "18")
+        .with(user(owner.getEmail()).roles("OWNER"))).andExpect(status().isForbidden());
+    guest.setPhone(null);accounts.saveAndFlush(guest);
+    mvc.perform(get("/bookings/confirm").param("courtId", court.getId().toString())
+        .param("date", day.toString()).param("hour", "18")
+        .with(user(guest.getEmail()).roles("CUSTOMER")))
+        .andExpect(status().isOk()).andExpect(model().attribute("missingPhone", true))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("cập nhật số điện thoại")))
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("disabled=\"disabled\"")));
+    mvc.perform(post("/bookings").with(user(guest.getEmail()).roles("CUSTOMER")).with(csrf())
+        .param("courtId", court.getId().toString()).param("date", day.toString())
+        .param("hour", "18").param("expectedPrice", "120000"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash().attributeExists("error"));
+    assertThat(bookings.count()).isZero();
+  }
+
+  @Test
   void securityAndCsrfAreEnforced() throws Exception {
     mvc.perform(get("/owner").with(user(guest.getEmail()).roles("CUSTOMER")))
         .andExpect(status().isForbidden());
