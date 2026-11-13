@@ -9,7 +9,7 @@ public class CourtForm {
   private String name;
 
   @NotBlank
-  @Pattern(regexp = "Cầu lông|Bóng đá|Tennis|Bóng rổ", message = "Chọn môn thể thao hợp lệ")
+  @Size(max = 40, message = "Tên môn thể thao tối đa 40 ký tự")
   private String sport;
 
   @NotBlank
@@ -91,7 +91,7 @@ public class CourtForm {
   }
 
   public void setSport(String x) {
-    sport = x;
+    sport = x == null ? null : x.trim();
   }
 
   public String getArea() {
