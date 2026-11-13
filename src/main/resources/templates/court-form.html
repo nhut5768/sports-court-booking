@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments :: head('Thông tin sân')}"></head>
-<body>
+<body class="sn-app sn-court-form">
 <header th:replace="~{fragments :: siteHeader}"></header>
 
 <main id="main-content" tabindex="-1" class="container page-space court-editor">
@@ -22,7 +22,8 @@
     </span>
   </div>
 
-  <div th:replace="~{fragments :: flash}"></div>
+  <section th:replace="~{fragments :: workspaceArt('owner', 'Sân đẹp, trải nghiệm tốt', 'Cập nhật hình ảnh, giá thuê và thông tin sân để kết nối với người chơi.')}"></section>
+<div th:replace="~{fragments :: flash}"></div>
 
   <form th:action="@{/owner/courts/save}"
         method="post"
@@ -69,24 +70,30 @@
 
             <div class="col-md-4">
               <label for="sport" class="form-label">Môn thể thao *</label>
-              <select id="sport"
-                      class="form-select"
-                      th:field="*{sport}"
-                      required>
-                <option value="">Chọn môn</option>
-                <option th:each="s : ${sports}"
-                        th:value="${s}"
-                        th:text="${s}"></option>
-              </select>
+              <input id="sport"
+       class="form-control"
+       th:field="*{sport}"
+       list="court-sport-options"
+       maxlength="40"
+       placeholder="Chọn hoặc nhập môn"
+       aria-describedby="sport-help"
+       required>
+<datalist id="court-sport-options">
+  <option th:each="s : ${sports}"
+          th:value="${s}"></option>
+</datalist>
+<small id="sport-help" class="court-editor-help">
+  Chọn môn gợi ý hoặc nhập tên môn khác, tối đa 40 ký tự.
+</small>
             </div>
 
             <div class="col-md-4">
-              <label for="area" class="form-label">Khu vực *</label>
+              <label for="area" class="form-label">Khu vực TP.HCM *</label>
               <select id="area"
                       class="form-select"
                       th:field="*{area}"
                       required>
-                <option value="">Chọn khu vực</option>
+                <option value="">Chọn quận/huyện theo tên quen dùng</option>
                 <option th:each="a : ${areas}"
                         th:value="${a}"
                         th:text="${a}"></option>
@@ -99,7 +106,7 @@
                      th:field="*{address}"
                      class="form-control"
                      maxlength="250"
-                     placeholder="Số nhà, tên đường, phường, thành phố"
+                     placeholder="Số nhà, tên đường, phường/xã, TP.HCM"
                      required>
             </div>
 

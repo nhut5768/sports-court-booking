@@ -1,0 +1,6 @@
+
+# Deployment scripts must run on Linux after Windows checkouts.
+deploy/*.sh text eol=lf
+Dockerfile text eol=lf
+deploy/Caddyfile text eol=lf
+scripts/*.sh text eol=lf

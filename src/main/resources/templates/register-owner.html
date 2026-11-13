@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đăng ký chủ sân')}"></head>
+<body class="sn-app sn-register-owner">
+<header th:replace="~{fragments :: siteHeader}"></header>
+
+<main id="main-content" tabindex="-1" class="container login-page register-page">
+  <div class="login-layout">
+
+    <!-- Giới thiệu -->
+    <section class="login-showcase">
+      <div class="login-showcase-content">
+        <span class="login-kicker">KHÔNG GIAN DÀNH CHO CHỦ SÂN</span>
+
+        <h1>Sân của bạn<br>Không gian quản lý riêng</h1>
+
+        <p class="login-description">
+          Tự tạo tài khoản chủ sân để thêm nhiều sân, cập nhật lịch trống
+          và quản lý đơn đặt thuộc sân của bạn.
+        </p>
+
+        <div class="login-benefits">
+          <div>
+            <span>01</span>
+            <p>Thêm sân và ảnh thực tế</p>
+          </div>
+          <div>
+            <span>02</span>
+            <p>Quản lý giờ chơi và giá sân</p>
+          </div>
+          <div>
+            <span>03</span>
+            <p>Theo dõi đơn và trò chuyện với khách</p>
+          </div>
+        </div>
+      </div>
+
+      <figure class="login-sports-visual"><img th:src="@{/images/generated/register-owner-welcome-v1.png}" width="1536" height="1024" alt="Chủ sân chào đón người chơi tại khu sân bóng buổi chiều tối" decoding="async"></figure>
+
+      <div class="login-showcase-footer">
+        <span class="login-live-dot" aria-hidden="true"></span>
+        Tự thêm sân. Quản lý lịch. Kết nối người chơi.
+      </div>
+    </section>
+
+    <!-- Đăng ký -->
+    <section class="login-panel" aria-labelledby="register-title">
+      <a class="login-back" th:href="@{/}">← Khám phá sân trước</a>
+
+      <div class="login-panel-heading">
+        <span class="login-symbol register-symbol" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M2 21v-2a7 7 0 0 1 12-4.9"></path>
+            <path d="M19 14v6M16 17h6"></path>
+          </svg>
+        </span>
+
+        <p class="eyebrow text-green">CHÀO MỪNG ĐẾN VỚI SÂN NHÀ</p>
+        <h2 id="register-title">Đăng ký chủ sân</h2>
+        <p class="muted">
+          Tự đặt mật khẩu và bắt đầu quản lý sân sau khi đăng nhập.
+        </p>
+      </div>
+
+      <form method="post"
+            th:action="@{/register/owner}"
+            th:object="${form}"
+            class="login-form">
+
+        <div th:if="${#fields.hasAnyErrors()}"
+             class="alert alert-danger"
+             role="alert">
+          <strong>Vui lòng kiểm tra lại thông tin:</strong>
+          <ul class="mb-0 mt-2">
+            <li th:each="e : ${#fields.allErrors()}"
+                th:text="${e}"></li>
+          </ul>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="name">Họ và tên</label>
+          <input id="name"
+                 th:field="*{name}"
+                 class="form-control"
+                 placeholder="Nhập họ và tên của bạn"
+                 maxlength="100"
+                 autocomplete="name"
+                 required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="email">Email đăng nhập</label>
+          <input id="email"
+                 th:field="*{email}"
+                 type="email"
+                 class="form-control"
+                 placeholder="Nhập địa chỉ email"
+                 maxlength="190"
+                 autocomplete="username"
+                 autocapitalize="none"
+                 spellcheck="false"
+                 required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="phone">Số điện thoại</label>
+          <input id="phone"
+                 th:field="*{phone}"
+                 type="tel"
+                 inputmode="numeric"
+                 class="form-control"
+                 placeholder="Ví dụ: 0912345678"
+                 maxlength="16"
+                 autocomplete="tel"
+                 aria-describedby="register-phone-help"
+                 required>
+          <small id="register-phone-help" class="register-field-help">
+            Số di động Việt Nam 10 số (03, 05, 07, 08, 09).
+            Dùng được để đăng nhập.
+          </small>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="password">Mật khẩu</label>
+          <input id="password"
+                 name="password"
+                 type="password"
+                 minlength="8"
+                 maxlength="64"
+                 class="form-control"
+                 placeholder="Tạo mật khẩu của bạn"
+                 autocomplete="new-password"
+                 aria-describedby="register-password-help"
+                 required>
+          <small id="register-password-help" class="register-field-help">
+            Sử dụng từ 8 đến 64 ký tự.
+          </small>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+          Đăng ký chủ sân
+        </button>
+      </form>
+
+      <div class="login-register">
+        <span>Đã có tài khoản?</span>
+        <a th:href="@{/login}">Đăng nhập ngay →</a>
+      </div>
+
+      <div class="login-register"><a th:href="@{/register/customer}">Bạn muốn đặt sân? Đăng ký khách hàng →</a></div>
+      <div class="login-payment-note">
+        <strong>Tài khoản dành cho chủ sân</strong>
+        <p class="mb-0">
+          Mỗi chủ sân tự thêm và quản lý nhiều sân riêng.
+          Google lần đầu chỉ tạo khách hàng; đăng ký chủ sân tại form này bằng email và mật khẩu riêng.
+        </p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

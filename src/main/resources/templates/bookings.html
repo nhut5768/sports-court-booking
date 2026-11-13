@@ -3,7 +3,7 @@
 
 <head th:replace="~{fragments :: head('Lịch của tôi')}"></head>
 
-<body>
+<body class="sn-app sn-bookings">
 <header th:replace="~{fragments :: siteHeader}"></header>
 
 <main id="main-content" tabindex="-1" class="container page-space my-bookings-page">
@@ -22,7 +22,8 @@
     </a>
   </div>
 
-  <div th:replace="~{fragments :: flash}"></div>
+  <section th:replace="~{fragments :: workspaceArt('customer', 'Lên lịch cho niềm vui', 'Theo dõi lịch chơi, kiểm tra tiền cọc và cùng đồng đội sẵn sàng ra sân.')}"></section>
+<div th:replace="~{fragments :: flash}"></div>
 
   <div class="workspace-section-note"><svg th:replace="~{fragments :: icon('calendar')}"></svg><span>Mỗi đơn là một cuộc hẹn. Kiểm tra thời hạn giữ chỗ và trạng thái cọc để lịch chơi luôn rõ ràng.</span></div>
 

@@ -3,7 +3,7 @@
 
 <head th:replace="~{fragments :: head('Quản lý sân')}"></head>
 
-<body>
+<body class="sn-app sn-owner">
 <header th:replace="~{fragments :: siteHeader}"></header>
 
 <main id="main-content" tabindex="-1" class="container page-space owner-dashboard">
@@ -23,10 +23,12 @@
   <p class="owner-navigation-note">Chỉ xác nhận cọc sau khi kiểm tra tiền đã về tài khoản.</p>
 </details>
 <div class="owner-workspace-content" id="owner-overview">
+<section th:replace="~{fragments :: workspaceArt('owner', 'Một không gian, mọi hoạt động', 'Quản lý sân, sắp xếp lịch đặt và theo dõi những cuộc hẹn mới mỗi ngày.')}"></section>
+
   <div class="owner-dashboard-heading">
     <div>
       <p class="eyebrow text-green">KHÔNG GIAN CHỦ SÂN</p>
-      <h1>Một góc nhìn. Toàn bộ sân.</h1>
+      <h1>Một góc nhìn · Toàn bộ sân</h1>
       <p class="muted mb-0">
         Theo dõi đơn đặt, cập nhật sân và quản lý doanh thu.
       </p>
