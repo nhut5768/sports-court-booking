@@ -1,0 +1,57 @@
+{
+  "checkedOn": "2026-11-02",
+  "license": "Pexels License",
+  "licenseUrl": "https://www.pexels.com/license/",
+  "usage": "Editorial banner and sport categories only. Never a photo of a listed court.",
+  "assets": [
+    {
+      "file": "football.jpg",
+      "photoId": 2277980,
+      "source": "https://www.pexels.com/photo/soccer-open-field-2277980/",
+      "author": "king Siberia",
+      "width": 840,
+      "downloadUrl": "https://images.pexels.com/photos/2277980/pexels-photo-2277980.jpeg?auto=compress&cs=tinysrgb&w=840&q=82",
+      "bytes": 73855,
+      "sha256": "3c277d0ba288d0b83a225e2cb17eccb66baf5c183cf4353d5b41f56446e00c0f"
+    },
+    {
+      "file": "badminton.jpg",
+      "photoId": 8007412,
+      "source": "https://www.pexels.com/photo/woman-playing-badminton-indoors-8007412/",
+      "width": 840,
+      "downloadUrl": "https://images.pexels.com/photos/8007412/pexels-photo-8007412.jpeg?auto=compress&cs=tinysrgb&w=840&q=82",
+      "bytes": 121034,
+      "sha256": "619bea7c7d054d45f71906d2a404e21742f1db32e6adb423f47ed748fb69e8cf"
+    },
+    {
+      "file": "basketball.jpg",
+      "photoId": 36248729,
+      "source": "https://www.pexels.com/photo/outdoor-basketball-court-with-palm-trees-36248729/",
+      "author": "Yulia Shapereva s",
+      "width": 840,
+      "downloadUrl": "https://images.pexels.com/photos/36248729/pexels-photo-36248729.jpeg?auto=compress&cs=tinysrgb&w=840&q=82",
+      "bytes": 267530,
+      "sha256": "2e40d1c159c731fbadf39fca25b2f8aebba95f8e0323f42781a15afafbc6d6b3"
+    },
+    {
+      "file": "tennis.jpg",
+      "photoId": 13425628,
+      "source": "https://www.pexels.com/photo/aerial-photography-of-tennis-courts-13425628/",
+      "author": "Zetong Li",
+      "width": 840,
+      "downloadUrl": "https://images.pexels.com/photos/13425628/pexels-photo-13425628.jpeg?auto=compress&cs=tinysrgb&w=840&q=82",
+      "bytes": 83550,
+      "sha256": "fee4b4f18c5f29b4e09aa448e7a0066c8fef958399084af701ffeaee7c670274"
+    },
+    {
+      "file": "hero.jpg",
+      "photoId": 13425628,
+      "source": "https://www.pexels.com/photo/aerial-photography-of-tennis-courts-13425628/",
+      "author": "Zetong Li",
+      "width": 1800,
+      "downloadUrl": "https://images.pexels.com/photos/13425628/pexels-photo-13425628.jpeg?auto=compress&cs=tinysrgb&w=1800&q=82",
+      "bytes": 283223,
+      "sha256": "22f3d5c20c6e08bdf2b4a6c8a7a0865e8150e2538e2c38005d319a6663576cba"
+    }
+  ]
+}

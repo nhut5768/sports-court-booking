@@ -90,8 +90,58 @@
  root.querySelector('[data-chat-ai]').onclick=setGeneral;root.querySelector('[data-chat-owners]').onclick=()=>directory();root.querySelector('[data-chat-inbox]').onclick=()=>inbox();
  if(role==='OWNER')root.querySelector('[data-chat-owners]').hidden=true;
  reset.onclick=async()=>{if(mode!=='ai'){if(role==='OWNER')inbox();else directory();return;}if(busy)return;try{await api(aiEndpoint,'/history',{method:'DELETE'});setGeneral();}catch(error){label(error.message);}};
- function connect(){if(!me||stream)return;stream=new EventSource(chatEndpoint+'/events');stream.addEventListener('ready',()=>{if(selected)sync();counts();});stream.addEventListener('message',event=>{try{const change=JSON.parse(event.data);if(change.conversationId===selected)sync();else if(mode==='picker'&&role==='OWNER'&&!panel.hidden)inbox();counts();}catch{}});stream.onerror=()=>{if(selected&&!panel.hidden)label('Đang kết nối lại; tin đã lưu sẽ được tải bù.');};}
- launch.onclick=()=>panel.hidden?open():hide();root.querySelector('.sn-chat-close').onclick=hide;panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();hide();}});
+ function connect() {
+  if (!me || stream) return;
+
+  const reconnectingText =
+    'Đang kết nối lại; tin đã lưu sẽ được tải bù.';
+
+  function clearConnectionWarning() {
+    if (status.textContent === reconnectingText) {
+      label('');
+    }
+  }
+
+  stream = new EventSource(chatEndpoint + '/events');
+
+  stream.addEventListener('ready', () => {
+    clearConnectionWarning();
+    if (selected && !panel.hidden) sync();
+    counts();
+  });
+
+  stream.addEventListener('heartbeat', clearConnectionWarning);
+
+  stream.addEventListener('message', event => {
+    clearConnectionWarning();
+
+    let change;
+    try {
+      change = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+
+    if (change.conversationId === selected && !panel.hidden) {
+      sync();
+    } else if (
+      mode === 'picker' &&
+      role === 'OWNER' &&
+      !panel.hidden
+    ) {
+      inbox();
+    }
+
+    counts();
+  });
+
+  stream.onerror = () => {
+    if (mode === 'conversation' && selected && !panel.hidden) {
+      label(reconnectingText);
+    }
+  };
+}
+launch.onclick=()=>panel.hidden?open():hide();root.querySelector('.sn-chat-close').onclick=hide;panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();hide();}});
  document.querySelectorAll('[data-open-chat],[data-open-ai]').forEach(button=>button.addEventListener('click',event=>{event.preventDefault();open();if(button.hasAttribute('data-open-ai'))setGeneral();else if(button.hasAttribute('data-open-chat')){if(role==='OWNER')inbox();else directory();}}));
  const recovery=setInterval(()=>{if(!panel.hidden&&!document.hidden){if(selected)sync();counts();}},10000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!panel.hidden&&selected)sync();});window.addEventListener('pagehide',()=>{stream?.close();clearInterval(recovery);});

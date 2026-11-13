@@ -1,5 +1,7 @@
-<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments :: head('Quản trị tài khoản')}"></head><body><header th:replace="~{fragments :: siteHeader}"></header><main id="main-content" tabindex="-1" class="container page-space admin-shell"><nav th:replace="~{admin-nav :: menu}"></nav><div th:replace="~{fragments :: flash}"></div>
-<section class="admin-heading"><p class="eyebrow text-green">TỔNG QUAN HỆ THỐNG</p><h1>Tài khoản trong tầm quản lý.</h1><p>Quản lý thông tin và trạng thái tài khoản, giữ nguyên dữ liệu và lịch sử.</p></section>
+<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments :: head('Quản trị tài khoản')}"></head><body class="sn-app sn-admin-accounts"><header th:replace="~{fragments :: siteHeader}"></header><main id="main-content" tabindex="-1" class="container page-space admin-shell"><nav th:replace="~{admin-nav :: menu}"></nav><div th:replace="~{fragments :: flash}"></div>
+<section class="admin-heading"><p class="eyebrow text-green">TỔNG QUAN HỆ THỐNG</p><h1>Tài khoản trong tầm quản lý</h1><p>Quản lý thông tin và trạng thái tài khoản, giữ nguyên dữ liệu và lịch sử.</p></section>
+<section th:replace="~{fragments :: workspaceArt('admin', 'Vận hành vững vàng', 'Theo dõi tài khoản, quyền truy cập và hoạt động trên nền tảng Sân Nhà.')}"></section>
+
 <div class="admin-stats"><article><span>Khách hàng</span><strong th:text="${stats.customers}">0</strong></article><article><span>Chủ sân</span><strong th:text="${stats.owners}">0</strong></article><article><span>Tài khoản bị khóa</span><strong th:text="${stats.locked}">0</strong></article></div>
 <section class="admin-card"><div class="admin-card-heading"><h2>Danh sách tài khoản</h2></div>
 <form method="get" th:action="@{/admin}" class="admin-filters">
