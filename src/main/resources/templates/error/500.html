@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Lỗi hệ thống')}"></head>
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+<main id="main-content" tabindex="-1" class="container page-space">
+  <section class="surface">
+    <p class="eyebrow text-green">500</p>
+    <h1>Hệ thống đang gặp sự cố</h1>
+    <p>Vui lòng thử lại sau. Nếu đang demo, kiểm tra nhật ký Terminal.</p>
+    <div th:replace="~{fragments :: pager(${page}, '/')}"></div>
+    <a class="btn btn-primary" th:href="@{/}">Về trang tìm sân</a>
+  </section>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

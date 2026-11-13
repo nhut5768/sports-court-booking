@@ -1,5 +1,7 @@
-<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments :: head('Chi tiết tài khoản')}"></head><body><header th:replace="~{fragments :: siteHeader}"></header><main id="main-content" tabindex="-1" class="container page-space admin-shell"><nav th:replace="~{admin-nav :: menu}"></nav><div th:replace="~{fragments :: flash}"></div>
+<!DOCTYPE html><html lang="vi" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments :: head('Chi tiết tài khoản')}"></head><body class="sn-app sn-admin-account"><header th:replace="~{fragments :: siteHeader}"></header><main id="main-content" tabindex="-1" class="container page-space admin-shell"><nav th:replace="~{admin-nav :: menu}"></nav><div th:replace="~{fragments :: flash}"></div>
 <section class="admin-heading"><p class="eyebrow text-green" th:text="|TÀI KHOẢN #${entry.id}|"></p><h1 th:text="${entry.name}"></h1><p>Cập nhật thông tin hoặc khóa tài khoản sẽ thu hồi các phiên đăng nhập cũ.</p></section>
+<section th:replace="~{fragments :: workspaceArt('admin', 'Vận hành vững vàng', 'Theo dõi tài khoản, quyền truy cập và hoạt động trên nền tảng Sân Nhà.')}"></section>
+
 <div class="admin-grid"><section class="admin-card"><h2>Thông tin tài khoản</h2>
 <dl class="admin-facts"><dt>Vai trò</dt><dd th:text="${entry.role}"></dd><dt>Trạng thái</dt><dd th:text="${entry.locked?'Bị khóa':'Hoạt động'}"></dd><dt>Đăng nhập Google</dt><dd th:text="${entry.google?'Đã liên kết':'Chưa liên kết'}"></dd><dt>Ngày tạo</dt><dd th:text="${#temporals.format(entry.createdAt,'dd/MM/yyyy HH:mm')}"></dd></dl>
 <form class="admin-form" method="post" th:action="@{/admin/accounts/{id}/profile(id=${entry.id})}">

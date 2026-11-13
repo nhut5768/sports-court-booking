@@ -3,7 +3,7 @@
 
 <head th:replace="~{fragments :: head('Tài khoản')}"></head>
 
-<body>
+<body class="sn-app sn-account">
 <header th:replace="~{fragments :: siteHeader}"></header>
 
 <main id="main-content" tabindex="-1" class="container page-space account-page">
@@ -16,7 +16,8 @@
     </p>
   </div>
 
-  <div th:replace="~{fragments :: flash}"></div>
+  <section th:replace="~{fragments :: workspaceArt(${account.role == 'ADMIN' ? 'admin' : account.role == 'OWNER' ? 'owner' : 'customer'}, 'Không gian của bạn', 'Quản lý hồ sơ, cập nhật thông tin và sẵn sàng cho những cuộc hẹn mới.')}"></section>
+<div th:replace="~{fragments :: flash}"></div>
 
   <div class="row g-4">
 
@@ -247,6 +248,13 @@
                    required>
           </div>
 
+          <div class="col-12" id="bank-qr-preview" hidden>
+            <h4 class="h6">Mã QR nhận chuyển khoản</h4>
+            <p id="bank-qr-status" class="muted small" role="status" aria-live="polite"></p>
+            <img id="bank-qr-image" width="270" style="max-width:100%;height:auto" alt="QR ngân hàng đang nhập" hidden>
+            <p class="muted small">Bấm lưu để áp dụng cho các đơn đặt sân. Kiểm tra người nhận trên ứng dụng ngân hàng trước khi chuyển tiền.</p>
+            <p class="deposit-warning" th:if="${account.hasPaymentQr()}">Ảnh QR tải lên đang được ưu tiên. Xóa ảnh QR ở trên để khách dùng QR tự tạo.</p>
+          </div>
           <div class="col-12">
             <button class="btn btn-primary" type="submit">
               Lưu tài khoản nhận cọc
@@ -318,5 +326,6 @@
 </main>
 
 <footer th:replace="~{fragments :: footer}"></footer>
+<script th:src="@{/vendor/bank-qr.js}" defer></script>
 </body>
 </html>
