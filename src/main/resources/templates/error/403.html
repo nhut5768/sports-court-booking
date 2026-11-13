@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Không có quyền')}"></head>
+<body>
+<header th:replace="~{fragments :: siteHeader}"></header>
+<main id="main-content" tabindex="-1" class="container page-space">
+  <section class="surface">
+    <p class="eyebrow text-green">403</p>
+    <h1>Bạn không có quyền truy cập</h1>
+    <p>Phân quyền được kiểm tra trên máy chủ, không chỉ ẩn nút trên giao diện.</p>
+    <div th:replace="~{fragments :: pager(${page}, '/')}"></div>
+    <a class="btn btn-primary" th:href="@{/}">Về trang tìm sân</a>
+  </section>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

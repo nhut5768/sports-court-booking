@@ -9,13 +9,16 @@
   <meta name="_csrf" th:content="${_csrf.token}">
   <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <title th:text="${title} + ' | Sân Nhà'">Sân Nhà</title>
-  <link rel="stylesheet" th:href="@{/vendor/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/vendor/tabler/tabler.min.css}">
   <link rel="stylesheet" th:href="@{/css/app.css}">
+  <link rel="stylesheet" th:href="@{/css/customer-discovery.css}">
   <link rel="stylesheet" th:href="@{/css/platform.css}">
   <script defer th:src="@{/vendor/san-nha-ui.js}"></script>
   <script defer th:src="@{/vendor/san-nha-assistant.js}"></script>
   <link rel="stylesheet" th:href="@{/css/admin.css}">
-  <link rel="stylesheet" th:href="@{/css/customer-discovery.css}">
+  <link rel="stylesheet" th:href="@{/css/template-redesign.css}">
+  <script defer th:src="@{/vendor/template-navigation.js}"></script>
+  <script defer th:src="@{/vendor/interface-motion.js}"></script>
 </head>
 
 <body>
@@ -61,6 +64,11 @@
   </nav>
 </header>
 
+<section th:fragment="workspaceArt(kind, title, description)" class="sn-feature-banner" aria-label="Giới thiệu chức năng">
+  <div class="sn-feature-copy"><span class="sn-feature-kicker">SÂN NHÀ · HẸN NHAU TRÊN SÂN</span><h2 th:text="${title}"></h2><p th:text="${description}"></p></div>
+  <img th:src="@{/images/generated/{kind}-workspace-v1.png(kind=${kind})}" width="1536" height="1024" alt="" decoding="async">
+</section>
+
 <div th:fragment="flash">
   <div th:if="${success}" class="alert alert-success" role="status" th:text="${success}"></div>
   <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
@@ -80,7 +88,7 @@
 </th:block>
 
 <footer th:fragment="footer" class="site-footer">
-  <div class="container footer-grid"><div><a class="brand" th:href="@{/}"><span class="brand-mark"><svg th:replace="~{fragments :: icon('court')}"></svg></span>Sân Nhà.</a><p>Một sân chơi phù hợp.<br>Một cuộc hẹn đáng mong chờ.</p><span class="footer-project-tagline">Website đặt sân thể thao trực tuyến</span></div>
+  <div class="container footer-grid"><div><a class="brand" th:href="@{/}"><span class="brand-mark"><svg th:replace="~{fragments :: icon('court')}"></svg></span>Sân Nhà.</a><p>Một sân chơi phù hợp<br>Một cuộc hẹn đáng mong chờ</p><span class="footer-project-tagline">Website đặt sân thể thao trực tuyến</span></div>
     <nav aria-label="Khám phá"><strong>Khám phá</strong><a th:href="@{/}">Tìm sân thể thao</a><a th:href="@{/} + '#how-it-works'">Hướng dẫn đặt sân</a></nav>
     <nav aria-label="Tài khoản"><strong>Tài khoản</strong><a sec:authorize="isAnonymous()" th:href="@{/login}">Đăng nhập</a><a sec:authorize="isAnonymous()" th:href="@{/register}">Đăng ký</a><a sec:authorize="isAuthenticated()" th:href="@{/account}">Hồ sơ cá nhân</a><a sec:authorize="hasRole('CUSTOMER')" th:href="@{/bookings}">Lịch của tôi</a><a sec:authorize="hasRole('OWNER')" th:href="@{/owner}">Quản lý sân</a></nav>
   </div><div class="container footer-bottom"><span>Sân Nhà · Đồ án HKDN · Nhóm 2</span><span>Đặt cọc 50% · Chủ sân xác nhận thủ công</span></div>
